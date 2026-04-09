@@ -32,3 +32,14 @@ Project moved to C:\Projects\biblo\ and locked build folders force deleted. Flut
 
 <strong>Lesson learned:</strong>
 Never store a Flutter project inside a cloud-synced folder (OneDrive, Google Drive, Dropbox). Always keep Flutter projects in a plain local directory like C:\Projects\.
+
+## 2. Not able to start or "cold boot" the Android emulator due to the pop-up message "Medium Phone API 36.1 is already running as process 26564."
+
+If the Android emulator is stuck and you're not able to reboot it and seeing the above error message, then run the following command in your Window terminal to kill the process:
+```
+taskkill /F /PID 26564
+```
+Expected output:
+```
+SUCCESS: The process with PID 26564 has been terminated.
+```
