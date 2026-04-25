@@ -1,3 +1,4 @@
+import 'profile_picture_updation.dart';
 import 'package:flutter/material.dart';
 import 'start.dart';
 import 'login.dart';
@@ -23,7 +24,8 @@ class Biblo extends StatelessWidget {
           '/signup': (context) => const SignupScreen(),
           '/home': (context) => const HomeScreen(),
           '/games': (context) => const GamesScreen(),
-          '/admin': (context) => const AdminScreen()
+          '/admin': (context) => const AdminScreen(),
+          '/profile_picture_updation': (context) => const ProfilePictureUpdationScreen(),
           /*
           1. You added 'const' to the screen constructors inside routes (e.g. StartScreen())
           2. If your screen constructors support const, it's a good habit to add it
