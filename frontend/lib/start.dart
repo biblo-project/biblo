@@ -16,7 +16,7 @@ class StartScreen extends StatelessWidget {
 
             // first text box
             Text(
-              '\nWelcome to\n',
+              '\nWelcome to',
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,
@@ -26,17 +26,17 @@ class StartScreen extends StatelessWidget {
 
             // second text box
             Text(
-              '\nBIBLO\n',
+              'BIBLO',
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,
-                  fontSize: 65
+                  fontSize: 40
               ),
             ),
 
             // third text box
             Text(
-              '\nA cozy space for avid readers\n',
+              'A cozy space for avid readers',
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,
@@ -44,15 +44,15 @@ class StartScreen extends StatelessWidget {
               ),
             ),
 
-            // fourth text box
-            Text(
-              '\n<biblo-gif-animation>\n\n\n\n',
-              style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 25
-              ),
+            // gif
+            Image.asset(
+                'assets/images/biblo-gif.gif',
+                alignment: Alignment.center,
+                scale: 1.8,
             ),
+
+            // space box
+            Text('\n'),
 
             // login button
             BasicButton(route: '/login', title: 'LOGIN'),
