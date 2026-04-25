@@ -51,7 +51,7 @@ class StartScreen extends StatelessWidget {
                 scale: 1.8,
             ),
 
-            // space box
+            // space
             Text('\n'),
 
             // login button
