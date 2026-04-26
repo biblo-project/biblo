@@ -26,7 +26,7 @@ class ProfilePictureUpdationScreen extends StatelessWidget {
                   ),
 
                   // user chooses to select an avatar
-                  const BasicButton(route: '/home', title: 'Select an avatar'),
+                  const BasicButton(route: '/avatar_selection', title: 'Select an avatar'),
 
                   // user chooses to upload a picture
                   const BasicButton(route: '/home', title: 'Upload a picture'),

@@ -40,7 +40,10 @@ class AdminScreen extends StatelessWidget {
                   const BasicButton(route: '/games', title: 'GAMES'),
 
                   // PROFILE PICTURE UPDATION BUTTON
-                  const BasicButton(route: '/profile_picture_updation', title: 'PROFILE PICTURE UPDATION')
+                  const BasicButton(route: '/profile_picture_updation', title: 'PROFILE PICTURE UPDATION'),
+
+                  // AVATAR SELECTION BUTTON
+                  const BasicButton(route: '/avatar_selection', title: 'AVATAR SELECTION')
                 ]
             )
         )
