@@ -32,10 +32,24 @@ class HomeScreen extends StatelessWidget {
                   const BasicButton(route: '/home', title: 'Get a curated suggestion'),
 
                   // BUTTON TO UPDATE PREFERENCES
-                  const BasicButton(route: '/home', title: 'Update my preferences'),
+                  const BasicButton(route: '/select_genres', title: 'Select my preferred genres'),
 
                   // BUTTON TO PLAY SOME GAMES
                   const BasicButton(route: '/games', title: 'Play some games'),
+
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/about_me');
+                    },
+                    child: const Text(
+                      'Learn about me!',
+                      style: TextStyle(
+                        color: Colors.lightBlueAccent, // Traditional link color
+                        decoration: TextDecoration.underline, // Adds the underline
+                        fontSize: 20,
+                      ),
+                    ),
+                  )
 
                 ]
             )
