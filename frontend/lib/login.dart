@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
-import 'basic_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,8 +12,32 @@ class LoginScreenState extends State<LoginScreen>
 {
   bool isObscured=true;
 
+  // define the controllers
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // tell the controllers to trigger a rebuild whenever the user types
+    _usernameController.addListener(() => setState(() {}));
+    _passwordController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    // always clean up controllers
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    bool isInputValid = _usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+
     return Scaffold(
         backgroundColor: primaryColor,
         body: Center(
@@ -46,6 +69,7 @@ class LoginScreenState extends State<LoginScreen>
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: TextField(
+                      controller: _usernameController, // attach controller
                       style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Username or email',
@@ -65,6 +89,7 @@ class LoginScreenState extends State<LoginScreen>
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: TextField(
+                      controller: _passwordController, // attach controller
                       obscureText: isObscured,
                       style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
@@ -94,8 +119,29 @@ class LoginScreenState extends State<LoginScreen>
                   // space
                   Text('\n'),
 
-                  // LOGIN BUTTON
-                  const BasicButton(route: '/login', title: 'LOGIN'),
+                  Padding(
+                    padding: const EdgeInsets.all(25.0),
+                    child: ElevatedButton(
+                      // If input is valid, provide navigation. Otherwise, null (greys it out).
+                        onPressed: isInputValid
+                            ? () => Navigator.pushNamed(context, '/home')
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: secondaryColor,
+                          foregroundColor: buttonTextColor,
+                          // These handle the "greying out" colors automatically
+                          disabledBackgroundColor: Colors.grey.shade800,
+                          disabledForegroundColor: Colors.white,
+                        ),
+                        child: const Text(
+                          'LOGIN',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20
+                          ),
+                        )
+                    ),
+                  ),
 
                   TextButton(
                     onPressed: () {

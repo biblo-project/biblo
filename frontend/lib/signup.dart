@@ -13,8 +13,37 @@ class SignupScreenState extends State<SignupScreen>
 {
   bool isObscured=true;
 
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // tell the controllers to trigger a rebuild whenever the user types
+    _usernameController.addListener(() => setState(() {}));
+    _emailController.addListener(() => setState(() {}));
+    _passwordController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    // always clean up controllers
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    bool isInputValid =
+        _usernameController.text.isNotEmpty &&
+            _emailController.text.isNotEmpty &&
+                _passwordController.text.isNotEmpty;
+
     return Scaffold(
         backgroundColor: primaryColor,
         body: Center(
@@ -56,6 +85,7 @@ class SignupScreenState extends State<SignupScreen>
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: TextField(
+                      controller: _usernameController, // attach controller
                       style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Username',
@@ -75,6 +105,7 @@ class SignupScreenState extends State<SignupScreen>
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: TextField(
+                      controller: _emailController, // attach controller
                       style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Email',
@@ -94,6 +125,7 @@ class SignupScreenState extends State<SignupScreen>
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: TextField(
+                      controller: _passwordController, // attach controller
                       obscureText: isObscured,
                       style: TextStyle(color: Colors.black),
                       decoration: InputDecoration(
@@ -124,7 +156,31 @@ class SignupScreenState extends State<SignupScreen>
                   Text('\n'),
 
                   // LOGIN BUTTON
-                  const BasicButton(route: '/home', title: 'SIGNUP'),
+                 // const BasicButton(route: '/home', title: 'SIGNUP'),
+
+                  Padding(
+                    padding: const EdgeInsets.all(25.0),
+                    child: ElevatedButton(
+                      // If input is valid, provide navigation. Otherwise, null (greys it out).
+                        onPressed: isInputValid
+                            ? () => Navigator.pushNamed(context, '/home')
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: secondaryColor,
+                          foregroundColor: buttonTextColor,
+                          // These handle the "greying out" colors automatically
+                          disabledBackgroundColor: Colors.grey.shade800,
+                          disabledForegroundColor: Colors.white,
+                        ),
+                        child: const Text(
+                          'SIGNUP',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20
+                          ),
+                        )
+                    ),
+                  ),
 
                   TextButton(
                     onPressed: () {

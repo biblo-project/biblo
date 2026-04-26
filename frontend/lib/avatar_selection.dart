@@ -1,6 +1,5 @@
 import 'theme.dart';
 import 'package:flutter/material.dart';
-import 'basic_button.dart';
 
 // this is the mirror to the controller (AvatarSelectionScreenState)
 class AvatarTile extends StatelessWidget {
@@ -114,6 +113,7 @@ class AvatarSelectionScreenState extends State<AvatarSelectionScreen>
                     ),
                   ),
 
+                  /*
                   // SELECT BUTTON
                   Padding(
                     padding: const EdgeInsets.all(25.0),
@@ -123,6 +123,36 @@ class AvatarSelectionScreenState extends State<AvatarSelectionScreen>
                     so I will be updating that later in all the buttons
                     because those buttons will have to be replaced potentially
                      */
+                  ),
+                   */
+
+                  // SELECT BUTTON
+                  Padding(
+                    padding: const EdgeInsets.all(25.0),
+                    child: ElevatedButton(
+                        onPressed: selectedIndex != null
+                            ? () => Navigator.pop(context, avatarAssetImageList[selectedIndex!])
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          // It sets the background color for the 'Enabled' state.
+                          // Flutter will automatically dim it when it's disabled.
+                          backgroundColor: secondaryColor,
+                          foregroundColor: primaryColor,
+
+                          // Optional: explicitly set the disabled color if you want a specific grey
+                          disabledBackgroundColor: Colors.grey.shade800,
+                          disabledForegroundColor: Colors.white,
+                        ),
+                        child: Text(
+                          'SELECT',
+                          style: TextStyle(
+                              //color: buttonTextColor,
+                              // removing color from here to allow the button to control the color
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20
+                          ),
+                        )
+                    ),
                   ),
                 ]
             )
