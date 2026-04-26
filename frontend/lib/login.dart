@@ -25,6 +25,7 @@ class LoginScreenState extends State<LoginScreen>
                 children: [
                   Text(
                     'Welcome back!\n',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                         color: textColor,
                         fontWeight: FontWeight.bold,

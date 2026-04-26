@@ -17,6 +17,7 @@ class StartScreen extends StatelessWidget {
             // first text box
             Text(
               '\nWelcome to',
+              textAlign: TextAlign.center,
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,
@@ -27,6 +28,7 @@ class StartScreen extends StatelessWidget {
             // second text box
             Text(
               'BIBLO',
+              textAlign: TextAlign.center,
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,
@@ -37,6 +39,7 @@ class StartScreen extends StatelessWidget {
             // third text box
             Text(
               'A cozy space for avid readers',
+              textAlign: TextAlign.center,
               style: TextStyle(
                   color: textColor,
                   fontWeight: FontWeight.bold,

@@ -78,6 +78,7 @@ class AvatarSelectionScreenState extends State<AvatarSelectionScreen>
                     padding: const EdgeInsets.all(25.0),
                     child: Text(
                       'Choose an avatar!',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           color: textColor,
                           fontWeight: FontWeight.bold,

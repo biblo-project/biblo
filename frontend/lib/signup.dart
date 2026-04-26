@@ -25,6 +25,7 @@ class SignupScreenState extends State<SignupScreen>
                 children: [
                   Text(
                     'Welcome!\n',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                         color: textColor,
                         fontWeight: FontWeight.bold,
