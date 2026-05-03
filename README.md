@@ -140,14 +140,13 @@ backend/
 ├── config.py
 ├── .env
 ├── requirements.txt
-├── alembic.ini
 │
 ├── models/
 │   ├── __init__.py
 │   ├── user.py
 │   ├── book.py
 │   ├── quote.py
-│   └── game/
+│   └── games/
 │       ├── __init__.py
 │       ├── fill_in_the_blanks.py
 │       ├── identify_the_book.py
@@ -159,7 +158,7 @@ backend/
 │   ├── user.py
 │   ├── book.py
 │   ├── quote.py
-│   └── game/
+│   └── games/
 │       ├── __init__.py
 │       ├── fill_in_the_blanks.py
 │       ├── identify_the_book.py
@@ -199,7 +198,6 @@ backend/
 │   └── recommender.py
 │
 └── alembic/
-├── env.py
-└── versions/
+     └── alembic.ini
 ```
 
