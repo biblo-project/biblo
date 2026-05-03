@@ -130,4 +130,76 @@ ended_at
   </tr>
 </table>
 
+## Backend structure
+The backend structure being setup:
+```
+backend/
+│
+├── main.py
+├── database.py
+├── config.py
+├── .env
+├── requirements.txt
+├── alembic.ini
+│
+├── models/
+│   ├── __init__.py
+│   ├── user.py
+│   ├── book.py
+│   ├── quote.py
+│   └── game/
+│       ├── __init__.py
+│       ├── fill_in_the_blanks.py
+│       ├── identify_the_book.py
+│       ├── match_authors.py
+│       └── card_game.py
+│
+├── schemas/
+│   ├── __init__.py
+│   ├── user.py
+│   ├── book.py
+│   ├── quote.py
+│   └── game/
+│       ├── __init__.py
+│       ├── fill_in_the_blanks.py
+│       ├── identify_the_book.py
+│       ├── match_authors.py
+│       └── card_game.py
+│
+├── api/
+│   ├── __init__.py
+│   ├── auth.py
+│   ├── users.py
+│   ├── books.py
+│   ├── recommendations.py
+│   └── games/
+│       ├── __init__.py
+│       ├── fill_in_the_blanks.py
+│       ├── identify_the_book.py
+│       ├── match_authors.py
+│       └── card_game.py
+│
+├── services/
+│   ├── __init__.py
+│   ├── recommendation_service.py
+│   └── games/
+│       ├── __init__.py
+│       ├── fill_in_the_blanks_service.py
+│       ├── identify_the_book_service.py
+│       ├── match_authors_service.py
+│       └── card_game_service.py
+│
+├── core/
+│   ├── __init__.py
+│   ├── security.py
+│   └── auth.py
+│
+├── ml/
+│   ├── __init__.py
+│   └── recommender.py
+│
+└── alembic/
+├── env.py
+└── versions/
+```
 
