@@ -200,4 +200,7 @@ backend/
 └── alembic/
      └── alembic.ini
 ```
-
+## Packages installed
+```
+py -m pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv alembic passlib[bcrypt] python-jose[cryptography]
+```
