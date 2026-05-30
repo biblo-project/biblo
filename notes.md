@@ -395,3 +395,97 @@ Because of this single line, inside your ```auth.py``` router, you can write:
 return db_user # A SQLAlchemy object
 ```
 And FastAPI will seamlessly read ```db_user.id``` and ```db_user.email```, validate them, drop the password, and convert it into clean JSON for your Flutter app.
+
+## 8. Updated ```core/security.py```
+```
+from passlib.context import CryptContext
+from datetime import datetime, timedelta, UTC
+from jose import jwt
+
+from ..config import settings
+
+pwd_context = CryptContext(schemes=["bcryprt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(UTC) + timedelta(minutes=60)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+```
+Here is the line-by-line explanation:
+
+### 1. The core imports
+```
+from passlib.context import CryptContext 
+```
+This is a tool specifically built for securely managing password hashing algorithms. It takes care of all the complex math needed to scramble a password beyond recognition.
+
+```
+from datetime import datetime, timedelta, UTC
+```
+We use datetime to find the exact current time, timedelta to measure out a 60-minute duration, and UTC to ensure our server uses universal global time instead of whatever local time your laptop happens to be set to.
+```
+from jose import jwt
+```
+This is the tool that packages user data (like their user ID) into an encrypted, tamper-proof string (the JWT token) that gets sent to your Flutter app.
+``` 
+from ..config import settings
+```
+* Navigates up one folder level (..) and imports your global settings object.
+* It needs access to that 64-character SECRET_KEY you generated earlier to securely sign the JWT tokens.
+
+### 2. Setting up the encryption engine
+``` 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+```
+* Configures our password hashing machine.
+* ```schemes=["bcrypt"]``` tells Python to use Bcrypt, which is an industry-standard, slow hashing algorithm designed to resist brute-force hacking attempts.
+* ```deprecated="auto"``` ensures that if you upgrade the security configuration later, old passwords will still be read correctly.
+
+### 3. Password hashing (for signup)
+```
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+```
+* A function that takes a plain-text password string and returns a completely unreadable, randomized string (a hash).
+* When a user registers, you pass their password through this. If their password is "password123", this function turns it into something like $2b$12$K3...etc. This is what gets saved to the database.
+
+### 4. Password verification (for login)
+```
+def verify_password(plain_password, hashed_password) -> bool:
+    return pwd_context.verify(plain_password, hashed_password) 
+```
+* A function that compares a plain-text password against a stored hash and returns True or False.
+* When a user tries to log in, they type a plain password. Because you can't "decrypt" a hash back into a normal password, passlib securely re-hashes the new password attempt and checks if it mathematically matches the scrambled hash in your database.
+
+### 5. Creating the digital hand-stamp (JWT token)
+``` 
+def create_access_token(data: dict):
+```
+A function that accepts a dictionary of data (usually the user's database ID) and turns it into a signed token.
+``` 
+    to_encode = data.copy()
+```
+* Creates a duplicate copy of the dictionary passed into the function.
+* This prevents the function from accidentally altering or modifying your original user data variables elsewhere in the app.
+``` 
+    expire = datetime.now(UTC) + timedelta(minutes=60)
+```
+* Calculates an exact timestamp precisely 60 minutes into the future.
+* For security reasons, authentication tokens shouldn't last forever. If someone steals a user's phone or intercepts their network packet, the token automatically becomes completely useless after 1 hour.
+``` 
+    to_encode.update({"exp": expire})
+```
+* Injects that expiration timestamp directly into our data dictionary under the key "exp".
+* The JWT standard looks explicitly for an "exp" key to know when to automatically lock the user out and force them to re-authenticate.
+``` 
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
+```
+* Scrambles the data payload, locks it down using your secret key, and signs it using a cryptographic algorithm.
+* It returns a long, three-part string separated by dots (xxxx.yyyy.zzzz) that is sent back to Flutter.
