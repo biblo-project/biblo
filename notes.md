@@ -586,6 +586,12 @@ In standard Python, when something goes wrong, you might raise a generic ValueEr
 
 When you write raise ```HTTPException(status_code=400, detail="Username taken")```, FastAPI catches this specific exception, halts any further execution of that request, and automatically serializes a clean JSON response to send over the network:
 
+<strong>NOTE:</strong>
+* JSON serialization is the process of converting an in-memory data structure or object (like a dictionary, list, or class instance) into a standardized JSON string format. 
+* This transformation is essential because live programming objects cannot be directly saved to a file, stored in a database, or transmitted across a network. 
+* Converting them into a text-based string stream makes them portable and universally readable by different programming languages. 
+* Serialization: Converts an Object/Data Structure -> JSON String. It is often referred to as "encoding" or "stringifying".
+* Deserialization: Converts a JSON String -> Object/Data Structure. It is the exact inverse process, often called "decoding" or "parsing"
 ```
 {
 "detail": "Username taken"
@@ -738,3 +744,4 @@ When a request arrives at your backend, FastAPI looks for that exact word—Bear
 There are other token types in the tech world (like Hawk or MAC tokens), which require complex cryptographic signing for every single request. By explicitly stating ```"token_type": "bearer"```, the API clarifies that no extra encryption math is needed on the frontend. The Flutter app just needs to copy-paste that token into the header, and it's good to go.
 
 ---
+## 10. Updated ```main.py```
