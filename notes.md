@@ -383,8 +383,8 @@ class Config:
 <strong>Important:</strong>
 
 This line is crucial because of a fundamental mismatch in Python libraries:
-* SQLAlchemy database objects store data <strong>as object attributes</strong> (accessible via dot notation, like user.email).
-* Pydantic schemas normally expect data <strong>as standard dictionary keys</strong> (like user["email"]).
+* SQLAlchemy database objects store data <strong>as object attributes</strong> (accessible via dot notation, like ```user.email```).
+* Pydantic schemas normally expect data <strong>as standard dictionary keys</strong> (like ```user["email"]```).
 
 By setting ```from_attributes = True```, you are telling Pydantic: 
 
@@ -489,3 +489,161 @@ A function that accepts a dictionary of data (usually the user's database ID) an
 ```
 * Scrambles the data payload, locks it down using your secret key, and signs it using a cryptographic algorithm.
 * It returns a long, three-part string separated by dots (xxxx.yyyy.zzzz) that is sent back to Flutter.
+
+## 9. Updated ```api/auth.py``` (signup + login endpoints)
+These are the actual URLs (```/auth/signup``` and ```/auth/login```) your Flutter app will target. They orchestrate checking the database, validating passwords, and generating tokens.
+``` 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from ..database import get_db
+from ..models.user import User
+from ..schemas.user import UserCreate, UserOut
+from ..core.security import  hash_password, verify_password, create_access_token
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+@router.post("/signup", response_model=UserOut)
+def signup(user_data: UserCreate, db: Session = Depends(get_db)):
+    # check if the user exists
+    db_user = db.query(User).filter(User.email == user_data.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    new_user = User(email=user_data.email, hashed_password=hash_password(user_data.password))
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@router.post("/login")
+def login(user_data: UserCreate, db: Session = Depends(get_db)):
+    user=db.query(User).filter(User.email == user_data.email).first()
+    if not user or not verify_password(user_data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+    
+    token = create_access_token(data={"sub": str(user.id)})
+    return {"access_token": token, "token_type": "bearer"}
+```
+This code is your Authentication Router (```api/auth.py```). It is the orchestration layer where everything you have built so far—database setups, data validation schemas, and security configurations—comes together to create two functional web URLs: ```/auth/signup``` and ```/auth/login```.
+
+Here is the line-by-line breakdown of how it works:
+
+### 1. Bringing all the pieces together (the imports)
+``` 
+from fastapi import APIRouter, Depends, HTTPException
+```
+* <strong>APIRouter:</strong> A tool from FastAPI used to split your API endpoints into separate files (mini-applications) so your main.py doesn't become a massive 2,000-line file.
+
+<strong>💡 The Analogy: A Mall Directory</strong>
+Imagine you are building a massive shopping mall. If you put every single store, checkout counter, and utility closet behind one single entrance door without any hallways, it would be total chaos.
+
+Instead, you build sections: a Food Court, a Fashion Wing, and an Entertainment Zone. Each section has its own map and management, but they all connect back to the main mall.
+
+main.py is the main entrance of the mall.
+
+APIRouter blocks are the different wings (e.g., ```/users```, ```/products```, ```/orders```).
+
+<strong>💻 The Technical Reality</strong>
+In a large application, keeping all your API routes (endpoints) in main.py creates a monolithic, unmaintainable file.
+
+APIRouter is a class that allows you to modularize your routing. You create a router instance in a separate file (e.g., ```auth.py```), attach routes to it using decorators like ```@router.post("/login")```, and then include that router back into your main FastAPI app instance (```app.include_router(auth_router)```). At runtime, FastAPI merges these trees together into a single OpenAPI schema.
+
+* <strong>Depends:</strong> FastAPI’s dependency injection system. It allows an endpoint to declare something it needs before running (like a database connection).
+
+<strong>💡 The Analogy: Theme Park Height Check </strong>
+Imagine you are going on a rollercoaster. Before you can board, a ride attendant has to check your height. You don't get to just jump into the seat; the "height check" must happen before the ride starts. If you pass, you get in. If you don't, you get turned away.
+
+```Depends``` is that attendant. It intercepts the user before they hit the actual logic of the endpoint to make sure they have what they need (like a database connection) or are allowed to be there (like an active login session).
+
+<strong>💻 The Technical Reality</strong>
+```Depends``` is the core of FastAPI's Dependency Injection (DI) system. Instead of your endpoint function manually creating a database session or parsing a JWT token inside its body, you pass the dependency as a function parameter wrapped in ```Depends()```.
+
+```
+@router.get("/profile")
+def get_profile(current_user: User = Depends(get_current_user)):
+return current_user
+```
+When a request hits this endpoint, FastAPI looks at ```Depends(get_current_user)```, executes that function first, takes whatever it returns (the user object), and injects it directly into the current_user variable. This ensures separation of concerns and makes your code incredibly easy to unit-test, because you can easily swap out real dependencies for "mock" dependencies.
+
+* <strong>HTTPException:</strong> A structured way to instantly stop code execution and send a specific error message and status code (like ```400 Bad Request```) back to Flutter.
+
+<strong>💡 The Analogy: The "Eject" Button</strong>
+Imagine you are driving a high-tech car, and suddenly the engine detects that there is absolutely no oil left. The car shouldn't just keep trying to drive and explode; it needs to immediately halt the system, flash a red light on your dashboard, and tell you exactly what went wrong.
+
+An HTTPException is that immediate emergency brake. It stops your Python code right where it is and sends a clear, structured signal back to the driver (your Flutter app).
+
+<strong>💻 The Technical Reality</strong>
+In standard Python, when something goes wrong, you might raise a generic ValueError or KeyError. However, a web server needs to communicate errors using standard HTTP Status Codes (like ```404 Not Found``` or ```401 Unauthorized```) so the frontend client knows how to react.
+
+When you write raise ```HTTPException(status_code=400, detail="Username taken")```, FastAPI catches this specific exception, halts any further execution of that request, and automatically serializes a clean JSON response to send over the network:
+
+```
+{
+"detail": "Username taken"
+}
+```
+Your Flutter app receives this alongside a 400 status code, allowing your Dart code to easily catch the error and show a nice toast notification to the user.
+```
+from sqlalchemy.orm import Session
+```
+```Session``` This is a type hint. It tells Python that our database variable (db) will be an official SQLAlchemy database session instance, unlocking auto-complete in your code editor.
+
+<strong>NOTE:</strong>
+In Python, a **type hint** is essentially a label you put next to a variable to say, "Hey, this variable is supposed to hold this specific kind of data." Let’s look at the technical reason we use them and an analogy to make it stick.
+
+<strong>💡 The Analogy: The Label on a Tool Organizer</strong>
+Imagine you have a big toolbox. If you just throw every tool into a giant, empty bucket, you can still use them, but every time you need a tool, you have to dig around blindly. You might pull out a hammer when you actually needed a screwdriver.
+
+Now, imagine an organized toolbox with molded slots, and each slot has a clear label: [10mm Wrench], [Phillips Screwdriver], or [Tape Measure].
+
+Because of the label, you know exactly what belongs there.
+
+When you reach for that slot, your brain instantly knows what capabilities that tool has (e.g., you know a screwdriver can turn a screw, but it can't measure a wall).
+
+A type hint is that label.
+
+<strong>💻 The Technical Reality</strong>
+By default, Python is a **dynamically typed** language. This means Python doesn't care what you put inside a variable. You could create a variable named db, and Python would happily let you store a database connection in it, or a piece of text, or the number 42. *Python only finds out it's wrong when the code actually runs and crashes*.
+
+When you write code like this:
+
+```
+db: Session
+```
+You are explicitly telling your Code Editor (like VS Code or Cursor) and Python: 
+"The variable db is a Session object from SQLAlchemy."
+
+Why this is a superpower (Auto-Complete)
+Because your code editor now knows that db is an official SQLAlchemy Session, it can look up all the built-in commands that come with SQLAlchemy.
+
+The moment you type ```db.``` in your editor, a helpful menu instantly pops up (auto-complete) showing you all your available options:
+```
+.query()
+.add()
+.commit()
+.close()
+```
+Without that type hint, your editor is completely in the dark. It doesn't know if ```db``` is a database session or just a random word, so it can't offer you any auto-complete suggestions, forcing you to memorize the exact SQLAlchemy syntax or constantly check the documentation.
+### 2. Building the router group
+``` 
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+```
+* ```prefix="/auth"```: This automatically groups all endpoints in this file under a shared URL prefix. Instead of writing out @router.post("/auth/signup"), you can just write @router.post("/signup").
+* ```tags=["Authentication"]```: This is purely for organizational aesthetics. It groups these endpoints together under an "Authentication" banner inside your interactive Swagger page (/docs).
+
+### 3. The signup endpoint (User registration)
+``` 
+@router.post("/signup", response_model=UserOut)
+```
+* ```@router.post("/signup")```: Declares that this endpoint accepts HTTP POST requests (used when creating new data) targeted at http://127.0.0.1:8000/auth/signup.
+* ```response_model=UserOut```: Remember your Pydantic schema? This guarantees that whatever data this function returns will be scrubbed through UserOut, stripping away the user's password before sending the JSON response back over the web.
+
+``` 
+def signup(user_data: UserCreate, db: Session = Depends(get_db)):
+```
+* ```user_data: UserCreate```: FastAPI reads the incoming JSON payload from Flutter, passes it through the ```UserCreate``` schema, checks if the email format is valid, and provides it to the function as a clean object.
+* ```db: Session = Depends(get_db)```: FastAPI fires up the ```get_db()``` utility function you wrote earlier, borrows a live database connection bucket, loads it into the ```db``` variable, and promises to close it automatically when this function finishes.
+
+``` 
+db_user = db.query(User).filter(User.email -
+```
