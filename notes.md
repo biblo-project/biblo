@@ -758,22 +758,18 @@ def root():
     return {"message": "Biblo backend running"}
 ```
 <strong>💡 The Analogy: Plugging an Extension Cord into the Wall</strong>
-Imagine you just bought a brand-new, high-tech gourmet blender for your kitchen. You set it on the counter. It’s fully assembled, perfectly engineered, and completely ready to make smoothies.
-
-But right now, it’s just sitting there doing nothing. Why? Because it isn’t plugged into the wall outlet.
-
-main.py is your kitchen's main electrical wall outlet (the power source for your whole app).
-
-auth.py (the file where you wrote your login logic) is that beautiful new blender.
-
-app.include_router(auth_router) is the act of physical plugging the blender's cord into the wall socket.
-
-Until you plug it in, your kitchen (main.py) has no idea the blender exists, and turning the blender's knobs won't do anything. Once plugged in, power flows, and the blender becomes an active part of your kitchen.
+* Imagine you just bought a brand-new, high-tech gourmet blender for your kitchen. You set it on the counter. It’s fully assembled, perfectly engineered, and completely ready to make smoothies.
+* But right now, it’s just sitting there doing nothing. Why? Because it isn’t plugged into the wall outlet.
+* ```main.py``` is your kitchen's main electrical wall outlet (the power source for your whole app).
+* ```auth.py``` (the file where you wrote your login logic) is that beautiful new blender.
+* ```app.include_router(auth_router)``` is the act of physical plugging the blender's cord into the wall socket.
+* Until you plug it in, your kitchen (```main.py```) has no idea the blender exists, and turning the blender's knobs won't do anything. Once plugged in, power flows, and the blender becomes an active part of your kitchen.
 
 <strong>💻 The Technical Reality</strong>
-When you start a FastAPI application, you run a command pointing directly to main.py (e.g., uvicorn main:app). FastAPI reads main.py from top to bottom to map out all the URLs (endpoints) it needs to listen for.
-
-If your authentication code is sitting in a file named ```auth.py```, FastAPI doesn't automatically go hunting through your folders to find it. You have to explicitly import it and register it.
+* When you start a FastAPI application, you run a command pointing directly to ```main.py``` (e.g., ```uvicorn main:app```). 
+* FastAPI reads ```main.py``` from top to bottom to map out all the URLs (endpoints) it needs to listen for.
+* If your authentication code is sitting in a file named ```auth.py```, FastAPI doesn't automatically go hunting through your folders to find it. 
+* You have to explicitly import it and register it.
 
 Line-by-Line Breakdown:
 ```
@@ -784,7 +780,7 @@ from .api.auth import router as auth_router
 ```
 app = FastAPI()
 ```
-This initializes your main web server application object. This is the heart of your backend.
+**This initializes your main web server application object. This is the heart of your backend.**
 ```
 app.include_router(auth_router)
 ```
@@ -817,7 +813,6 @@ Your ```main.py``` code will look like this:
 ```
 from fastapi import FastAPI
 from .api.auth import router as auth_router
-# Your new import line - exactly right!
 from .ml.recommendations import router as rec_router 
 
 app = FastAPI()
@@ -831,3 +826,86 @@ def root():
     return {"message": "Biblo backend running"}
 ```
 
+---
+## 11. Run Alembic migrations to create the users table in PostgreSQL
+
+### 1. Run the following command in the terminal:
+```
+alembic init alembic
+```
+
+<strong>NOTE:</strong>
+* You might run into errors if a directory named alembic already exists. To avoid any such errors, delete the directory beforehand.
+* After the above command successfully executes, it automatically creates:
+
+  * A new folder named ```alembic``` inside your backend directory (containing your migration environment files).
+  * A file named ```alembic.ini``` (this file will be on the same level as ```main.py```).
+
+### 2. Now, configure alembic.ini with your DB URL:
+```
+sqlalchemy.url = driver://user:pass@localhost/dbname
+```
+Here is what each placeholder piece means, and exactly what you should type in its place:
+
+* ```driver```: The type of database and the Python library you are using to talk to it. 
+* For a standard local setup using PostgreSQL or SQLite, this will look like:
+  * **For PostgreSQL**: ```postgresql+psycopg2```
+  * **For SQLite** (simplest local setup): ```sqlite:///```
+* ```user```: Your database username (often postgres by default for PostgreSQL).
+* ```pass```: The password you chose when you installed/setup your database.
+* ```localhost```: This literally means "this computer." It's the network address for your own machine (127.0.0.1).
+* ```dbname```: The specific name of the database you created for this project.
+
+### 3. Update ```alembic/env.py```
+In the file, make the following update:
+```
+from backend.database import Base
+from backend.models.user import User
+target_metadata = Base.metadata
+```
+
+<strong>NOTE:</strong>
+Make sure that your ```.env``` file is in the root and NOT inside the ```backend/``` directory.
+### 4. Now, run the following commands:
+```
+alembic revision --autogenerate -m "create users table"
+alembic upgrade head
+```
+Now, to check if the table was successfully created, try either of these:
+
+1. Check:
+```
+biblo\Databases\BIBLO\Schemas\public\Tables\users
+```
+If you don't see the ```users``` under ```Tables``` then Alembic could not detect your models.
+
+2. Check:
+In 
+```
+biblo/
+└── alembic/
+    └── versions/
+```
+Look for a file named something like:
+```a1b2c3d4_create_users_table.py```
+
+If it contains something like:
+``` 
+def upgrade():
+    op.create_table(
+        'users',
+        ...
+    )
+```
+then Alembic successfully detected your model.
+
+However, if the file looks like this:
+```
+def upgrade():
+pass
+
+def downgrade():
+pass
+```
+then Alembic did NOT detect your User model.
+=> The most common reason is that env.py imports Base but never imports the model definitions.
