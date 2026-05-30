@@ -745,3 +745,89 @@ There are other token types in the tech world (like Hawk or MAC tokens), which r
 
 ---
 ## 10. Updated ```main.py```
+``` 
+from fastapi import FastAPI
+from apis.auth import router as auth_router
+
+app=FastAPI()
+
+app.include_router(auth_router)
+
+@app.get("/")
+def root():
+    return {"message": "Biblo backend running"}
+```
+<strong>💡 The Analogy: Plugging an Extension Cord into the Wall</strong>
+Imagine you just bought a brand-new, high-tech gourmet blender for your kitchen. You set it on the counter. It’s fully assembled, perfectly engineered, and completely ready to make smoothies.
+
+But right now, it’s just sitting there doing nothing. Why? Because it isn’t plugged into the wall outlet.
+
+main.py is your kitchen's main electrical wall outlet (the power source for your whole app).
+
+auth.py (the file where you wrote your login logic) is that beautiful new blender.
+
+app.include_router(auth_router) is the act of physical plugging the blender's cord into the wall socket.
+
+Until you plug it in, your kitchen (main.py) has no idea the blender exists, and turning the blender's knobs won't do anything. Once plugged in, power flows, and the blender becomes an active part of your kitchen.
+
+<strong>💻 The Technical Reality</strong>
+When you start a FastAPI application, you run a command pointing directly to main.py (e.g., uvicorn main:app). FastAPI reads main.py from top to bottom to map out all the URLs (endpoints) it needs to listen for.
+
+If your authentication code is sitting in a file named ```auth.py```, FastAPI doesn't automatically go hunting through your folders to find it. You have to explicitly import it and register it.
+
+Line-by-Line Breakdown:
+```
+from .api.auth import router as auth_router
+```
+* This goes into your folders, looks inside the api directory, opens the auth file, and grabs the router you built there. 
+* We rename it as ```auth_router``` just to be incredibly clear about what it is.
+```
+app = FastAPI()
+```
+This initializes your main web server application object. This is the heart of your backend.
+```
+app.include_router(auth_router)
+```
+This tells your main app: 
+"Take every single URL endpoint written inside auth_router (like ```/login```, ```/register```, ```/logout```) and copy-paste them into your main URL map."
+```
+@app.get("/")
+```
+* This is just a simple "Health Check" route left at the base of your main file. 
+* If you open your browser to http://localhost:8000/, it will return:
+```
+{"message": "Biblo backend running"}
+ ```
+just to prove to you that your server is alive and successfully turned on.
+
+<strong>NOTE:</strong>
+Similar to the ```auth_router```, if you have a folder structure for machine learning or recommendation routes, you import that specific router and plug it into ```main.py``` the exact same way.
+
+Assuming your folder structure looks something like this:
+```
+
+└── my_project/
+├── main.py
+├── api/
+│   └── auth.py          # Contains auth_router
+└── ml/
+└── recommendations.py   # Contains rec_router
+```
+Your ```main.py``` code will look like this:
+```
+from fastapi import FastAPI
+from .api.auth import router as auth_router
+# Your new import line - exactly right!
+from .ml.recommendations import router as rec_router 
+
+app = FastAPI()
+
+# Registering both "wings" of your application
+app.include_router(auth_router)
+app.include_router(rec_router) 
+
+@app.get("/")
+def root():
+    return {"message": "Biblo backend running"}
+```
+
