@@ -298,3 +298,100 @@ For example, when you run Alembic migrations later, Alembic imports your Base, l
 
 <strong> Note</strong>: In newer versions of SQLAlchemy 2.0+, this is often written using a class-based approach inheriting from DeclarativeBase, but functionally it performs the exact same mechanical registry role under the hood!
 
+## 7. Updates user.py under 'models/' and 'schemas/'
+
+### Updated ```models/user.py```:
+```
+from sqlalchemy import Column, Integer, String
+from ..database import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+
+'''
+A Model represents what your data looks like inside the database. This defines the exact structure of the users table in PostgreSQL.
+'''
+```
+
+### Updated ```schemas/user.py```:
+```
+from pydantic import BaseModel, EmailStr
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+
+    class Config:
+        from_attributes = True
+```
+
+<strong> NOTE:</strong> While database models (like SQLAlchemy) define how data is stored in your PostgreSQL tables, Pydantic schemas define how data moves into and out of your FastAPI endpoints. They act as gatekeepers, validating incoming data and filtering outgoing data.
+
+Here is the line-by-line breakdown of what this code does and why it is written this way:
+
+#### 1. The imports
+
+```
+from pydantic import BaseModel, EmailStr
+```
+* <strong>BaseModel:</strong> The core class from Pydantic. Any class that inherits from this automatically gains data validation, type checking, and serialization powers.
+* <strong>EmailStr:</strong> A special type provided by Pydantic. It doesn't just check if the data is a string; it automatically runs a validation check to ensure the string is a format-correct email address (e.g., contains an @ and a valid domain). If a user tries to sign up with "not-an-email", Pydantic will instantly reject the request with a 422 Unprocessable Entity error before it ever touches your database.
+
+#### 2. The input gatekeeper: ```UserCreate```
+```
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+```
+
+This schema handles incoming data. When a user wants to register or log in, they must send a JSON payload that matches this exact blueprint:
+```
+{
+  "email": "user@example.com",
+  "password": "supersecurepassword123"
+}
+```
+Because this model requires a plain-text password string, your FastAPI endpoint can receive it, pass it to your hashing function, and save the hashed version to the database.
+
+#### 3. The output filter: ```UserOut```
+```
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+```
+This schema handles outgoing data. When your backend finishes creating a user, you want to send a success response back to the Flutter app.
+
+Notice what is missing here: ```password```.
+
+By returning data through the ```UserOut``` schema, FastAPI automatically strips away the password field. Even if your database query contains the hashed password, it will never be sent over the internet to the client. This is an essential security layer.
+
+#### 4. The magic configuration
+```
+class Config:
+        from_attributes = True
+```
+<strong>Note:</strong> In older versions of Pydantic, this was written as ```orm_mode = True```.
+
+<strong>Important:</strong>
+
+This line is crucial because of a fundamental mismatch in Python libraries:
+* SQLAlchemy database objects store data <strong>as object attributes</strong> (accessible via dot notation, like user.email).
+* Pydantic schemas normally expect data <strong>as standard dictionary keys</strong> (like user["email"]).
+
+By setting ```from_attributes = True```, you are telling Pydantic: 
+
+"Hey, when I return data from the database, it's going to be an ORM object, not a dictionary. Go ahead and read its attributes anyway."
+
+Because of this single line, inside your ```auth.py``` router, you can write:
+```
+return db_user # A SQLAlchemy object
+```
+And FastAPI will seamlessly read ```db_user.id``` and ```db_user.email```, validate them, drop the password, and convert it into clean JSON for your Flutter app.
