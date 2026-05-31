@@ -1556,3 +1556,102 @@ alembic upgrade head
 ```
 
 ---
+## 25. (In Pg Admin 4) ERROR: syntax error at or near "FROM"
+This specific syntax error means your database console was already expecting a different format, or you accidentally typed something extra right before the word FROM.
+
+Let's look at why PostgreSQL threw this error and how to fix it depending on where you are typing it.
+
+**💡 The Common Culprits**
+1. The "Double Command" Trap
+   If you were typing this in a command-line interface or a tool like pgAdmin, and you accidentally left a previous command half-written on the line above without a semicolon, PostgreSQL smashes them together.
+
+For example, if the console secretly read it like this:
+```
+SELECT * DELETE FROM users WHERE id = 1;
+```
+It looks at ```SELECT * DELETE``` and says, 
+"Whoa, I have no idea what you're trying to do. Syntax error near 'FROM'."
+
+2. The psql Shortcut Quirk
+   If you are using the terminal-based psql command line interface, you don't actually need to write FROM at all for a basic deletion!
+
+**💻 The Immediate Fixes**
+Try running the command using one of these two variations to clear out the syntax confusion:
+
+**1. Clean Variation A (Standard SQL)**
+Clear your current query window or terminal completely, press Enter a few times to get a fresh prompt line, and run only this on a single line:
+
+```
+DELETE FROM users WHERE id = 1;
+```
+
+**2. Clean Variation B (The psql Shorthand)**
+If Variation A keeps complaining, use PostgreSQL's direct shortcut which completely bypasses the word **FROM**:
+
+```
+DELETE users WHERE id = 1;
+```
+
+---
+## 26. Network error occurred: ClientException with SocketException: Connection refused (OS Error: Connection refused, errno = 111)
+
+**💡 The Analogy: The Secure Gatekeeper**
+* Imagine you are throwing a house party, and you tell your security guard (FastAPI): 
+"Only let people in if they knock on the front door from inside the living room." 
+
+* Your friend (the Android Emulator) is standing outside in the driveway. They call your phone and say, 
+"Hey, I'm knocking on the door at address 10.0.2.2!" 
+
+* The security guard looks at the driveway, shrugs, and says, 
+"Sorry, I am only listening for knocks coming from inside the living room (127.0.0.1). Go away." 
+
+* By default, when you start Uvicorn, it locks itself down to 127.0.0.1 (localhost), meaning it will only accept requests that originate from the exact same machine, and it completely ignores external traffic—including your emulator, which runs on a virtualized separate network interface.
+
+**💻 The Technical Fixes**
+To fix this, we need to tell Uvicorn to open its ears to the whole local network, and ensure your router paths line up.
+
+**Step 1: Tell Uvicorn to listen to everything (0.0.0.0)**
+* Instead of running your standard Uvicorn command, you need to explicitly pass the --host 0.0.0.0 flag. 
+* Writing 0.0.0.0 tells Uvicorn: "Listen to requests coming from absolutely anywhere, including emulators and local Wi-Fi devices."
+* Stop your Python server (Ctrl + C) and restart it in your backend folder using this exact command:
+```
+uvicorn main:app --reload --host 0.0.0.0
+```
+When it fires up, you will see the terminal line change to:
+```
+INFO: Uvicorn running on http://0.0.0.0:8000
+```
+
+**Step 2: Double-Check your Backend Route Path**
+Look closely at the error message your Flutter app printed:
+```
+uri=http://10.0.2.2:8000/auth/signup
+```
+
+Include your authentication router with a prefix:
+```
+app.include_router(auth_router, prefix="/auth")
+```
+
+**Step 3: Windows Firewall (Rare but possible)**
+* If you run Uvicorn with --host 0.0.0.0 and Windows pops up a security alert asking if you want to allow Python/Uvicorn to communicate on private networks, make sure to click "Allow Access." 
+* If Windows blocks it, the emulator still won't be able to get through the gate.
+
+---
+## 27. ImportError: attempted relative import beyond top-level package
+
+**Error:**
+* When you ran Uvicorn with --host 0.0.0.0, it forced Python to spin up a completely brand-new, isolated background process (a SpawnProcess).
+* Because it’s a freshly spawned process, Python completely forgot the context of the "family tree" package structure again. So the moment it hit that leading dot (```.apis.auth```) inside your ```main.py```, it threw the exact same error.
+
+**Solution:**
+**Step 1: Open ```backend/main.py```**
+Look at line 2 where Uvicorn tripped up:
+```
+from .apis.auth import router as auth_router
+```
+**Step 2: Remove the leading dot**
+Change it to a clean, absolute import:
+```
+from apis.auth import router as auth_router
+```
