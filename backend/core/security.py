@@ -4,7 +4,7 @@ from jose import jwt
 
 from ..config import settings
 
-pwd_context = CryptContext(schemes=["bcryprt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
