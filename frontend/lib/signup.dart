@@ -11,8 +11,8 @@ Future<void> registerUser(String username, String email, String password) async 
     url,
     headers: { 'Content-Type': 'application/json'},
       body: jsonEncode({
-            'username': username,
             'email': email,
+            'username': username,
             'password': password
           } ),
   );
