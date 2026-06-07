@@ -197,13 +197,25 @@ class LoginScreenState extends State<LoginScreen>
                             // Need to show a loading spinner or log so you know it clicked
                             print('Login button tapped! Connecting to backend......');
 
+                            // Grab the navigator instance immediately BEFORE the async gap
+                            final navigator = Navigator.of(context);
+                            final scaffoldMessenger = ScaffoldMessenger.of(context);
+
                             // Now, call your function using the actual text from your controllers
                             // we use 'await' because we have to wait for the network response
                             try {
-                              await authenticateUser(
+                              final String? token = await authenticateUser(
                                   _usernameOrEmailController.text.trim(),
                                   _passwordController.text
                               );
+
+                              // check if the widget is still alive in the layout tree
+                              if(!context.mounted) return;
+
+                              if(token != null){
+                                navigator.pushReplacementNamed('/home');
+                              }
+
                             } catch (e) {
                               // if the network request fails entirely (e.g. backend server is off)
                               print("Network error occurred: $e");

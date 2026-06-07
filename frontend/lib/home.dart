@@ -15,38 +15,58 @@ class HomeScreen extends StatelessWidget {
                 //crossAxisAlignment: CrossAxisAlignment.center,
                 // redundant for Column widget
                 children: [
-                  Text(
-                    'So, what are we doing today?\n',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: textColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 30
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      'So, what are we doing today?\n',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 30
+                      ),
                     ),
                   ),
 
                   // BUTTON TO GET A RANDOM SUGGESTION
-                  const BasicButton(route: '/home', title: 'Get a random suggestion'),
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: const BasicButton(route: '/home', title: 'Get a random suggestion'),
+                  ),
 
                   // BUTTON TO GET A CURATED SUGGESTION
-                  const BasicButton(route: '/home', title: 'Get a curated suggestion'),
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: const BasicButton(route: '/home', title: 'Get a curated suggestion'),
+                  ),
 
                   // BUTTON TO UPDATE PREFERENCES
-                  const BasicButton(route: '/select_genres', title: 'Select my preferred genres'),
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: const BasicButton(route: '/select_genres', title: 'Select my preferred genres'),
+                  ),
 
                   // BUTTON TO PLAY SOME GAMES
-                  const BasicButton(route: '/games', title: 'Play some games'),
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: const BasicButton(route: '/games', title: 'Play some games'),
+                  ),
 
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/about_me');
-                    },
-                    child: const Text(
-                      'Learn about me!',
-                      style: TextStyle(
-                        color: Colors.lightBlueAccent, // Traditional link color
-                        decoration: TextDecoration.underline, // Adds the underline
-                        fontSize: 20,
+                  Text('\n\n\n\n\n\n\n\n'),
+
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/about_me');
+                      },
+                      child: const Text(
+                        'Learn about me!',
+                        style: TextStyle(
+                          color: Colors.lightBlueAccent, // Traditional link color
+                          decoration: TextDecoration.underline, // Adds the underline
+                          fontSize: 20,
+                        ),
                       ),
                     ),
                   )
