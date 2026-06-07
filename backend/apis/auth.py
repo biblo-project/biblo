@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.user import User
-from backend.schemas.user import UserCreate, UserOut
+from backend.schemas.user import UserCreate, UserOut, UserLogin
 from backend.core.security import  hash_password, verify_password, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -25,10 +26,19 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login")
-def login(user_data: UserCreate, db: Session = Depends(get_db)):
-    user=db.query(User).filter(User.email == user_data.email).first()
+def login(user_data: UserLogin, db: Session = Depends(get_db)):
+
+    # .strip() prevents issues if the user accidentally typed a trailing space
+    identifier = user_data.username_or_email.strip()
+
+    user=db.query(User).filter(
+        or_(
+            User.username == identifier,
+            User.email == identifier
+        )
+    ).first()
     if not user or not verify_password(user_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}

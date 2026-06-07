@@ -323,6 +323,10 @@ class SignupScreenState extends State<SignupScreen>
                               // Need to show a loading spinner or log so you know it clicked
                               print('Signup button tapped! Connecting to backend......');
 
+                              // Grab the navigator instance immediately BEFORE the async gap
+                              final navigator = Navigator.of(context);
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
                               // Now, call your function using the actual text from your controllers
                               // we use 'await' because we have to wait for the network response
                               try {
@@ -330,6 +334,17 @@ class SignupScreenState extends State<SignupScreen>
                                   _usernameController.text.trim(),
                                   _emailController.text.trim(),
                                   _passwordController.text
+                                );
+
+                                // Check if the widget is still in the tree before navigating
+                                if (!mounted) return;
+
+                                // Pop the signup screen off the stack and reveal/push the login screen
+                                navigator.pushReplacementNamed('/login');
+
+                                // Optional: Show a quick confirmation snackbar message
+                                scaffoldMessenger.showSnackBar(
+                                  const SnackBar(content: Text('Account created! Please log in.')),
                                 );
                               } catch (e) {
                                 // if the network request fails entirely (e.g. backend server is off)
