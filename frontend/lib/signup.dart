@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'theme.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+
+import 'package:email_validator/email_validator.dart';
+import 'package:image_picker/image_picker.dart';
 
 Future<void> registerUser(String username, String email, String password) async {
   // Remember: 10.0.2.2 points your Android emulator to your computer's backend
@@ -64,6 +69,37 @@ class SignupScreenState extends State<SignupScreen>
     super.dispose();
   }
 
+  // variable to hold the chosen image file path
+  File? _selectedImage;
+
+  // instantiate the ImagePicker engine
+  final ImagePicker _picker = ImagePicker();
+
+  // create the function to open the native gallery app
+  Future<void> _pickImageFromGallery() async {
+    try {
+
+      // triggers the OS to open the default photos/gallery app overlay
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      // if the user backs out of the gallery without picking anything, do nothing
+      if (pickedFile == null) return;
+
+      // update th state to render the fresh image inside the CircleAvatar
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+
+    }
+
+    catch (e) {
+      print("Error opening gallery: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -97,15 +133,26 @@ class SignupScreenState extends State<SignupScreen>
 
                       // ADD PROFILE PICTURE BUTTON
                       GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/home');
-                        },
+
+                        // calls the native gallery launcher function
+                        onTap: _pickImageFromGallery,
+
                         child: CircleAvatar(
                           radius: 145,
                           backgroundColor: secondaryColor,
                           child: CircleAvatar(
                             radius: 130,
-                            foregroundImage: AssetImage(
+                            foregroundImage: _selectedImage != null
+
+                              // displays chosen image
+                              ? FileImage(_selectedImage!) as ImageProvider
+                              /*
+                              '!' at the end is the null assertion operator to forcefully
+                              cast a nullable type (File?) into a non-nullable type (File)
+                               */
+
+                              // displays default image
+                              : const AssetImage(
                                 'assets/images/biblo-signup-avatar-cropped.png'),
                             backgroundColor: secondaryColor,
           
@@ -118,8 +165,9 @@ class SignupScreenState extends State<SignupScreen>
 
                       // ENTER USERNAME TEXTBOX
                       Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: TextField(
+                        padding: const EdgeInsets.all(2),
+                        child: TextFormField(
+                            autovalidateMode: AutovalidateMode.onUserInteraction, // <-- Validates live
                           controller: _usernameController, // attach controller
                           style: TextStyle(color: Colors.black),
                           decoration: InputDecoration(
@@ -133,14 +181,37 @@ class SignupScreenState extends State<SignupScreen>
                             ),
                             filled: true,
                             fillColor: secondaryColor,
+                            errorStyle: const TextStyle(
+                              fontSize: 16.0,          // Increases the text size (Default is usually 12.0)
+                              fontWeight: FontWeight.w500, // Optional: Makes it slightly bolder/more readable
+                            ),
                           ),
+                          validator: (String? value) {
+
+                            // check if username is blank
+                            if(value==null || value.isEmpty) {
+                              return "Please enter a valid username";
+                            }
+
+                            // check if username has non-alphanumeric characters
+                            // Regular Expression matching only letters and numbers
+                            final alphanumericRegex = RegExp(r'^[a-zA-Z0-9]+$');
+                            if (!alphanumericRegex.hasMatch(value)) {
+                              return 'Only letters and numbers are allowed';
+                            }
+
+                            // Return null if the text is perfectly valid
+                            return null;
+
+                          } // end of validator
                         ),
                       ),
 
                       // ENTER EMAIL TEXTBOX
                       Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: TextField(
+                        padding: const EdgeInsets.all(2),
+                        child: TextFormField(
+                            autovalidateMode: AutovalidateMode.onUserInteraction, // <-- Validates live
                           controller: _emailController, // attach controller
                           style: TextStyle(color: Colors.black),
                           decoration: InputDecoration(
@@ -154,14 +225,34 @@ class SignupScreenState extends State<SignupScreen>
                             ),
                             filled: true,
                             fillColor: secondaryColor,
+                            errorStyle: const TextStyle(
+                              fontSize: 16.0,          // Increases the text size (Default is usually 12.0)
+                              fontWeight: FontWeight.w500, // Optional: Makes it slightly bolder/more readable
+                            ),
                           ),
+                            validator: (String? value) {
+
+                              // check if username is blank
+                              if(value==null || value.isEmpty) {
+                                return "Please enter a valid username";
+                              }
+
+                              // check if the email is valid
+                              if (!EmailValidator.validate(value)) {
+                                return 'Please enter a valid email address';
+                              }
+
+                              // Return null if the text is perfectly valid
+                              return null;
+                            }
                         ),
                       ),
 
                       // ENTER PASSWORD TEXTBOX
                       Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: TextField(
+                        padding: const EdgeInsets.all(2),
+                        child: TextFormField(
+                            autovalidateMode: AutovalidateMode.onUserInteraction, // <-- Validates live
                           controller: _passwordController, // attach controller
                           obscureText: isObscured,
                           style: TextStyle(color: Colors.black),
@@ -185,16 +276,45 @@ class SignupScreenState extends State<SignupScreen>
                             ),
                             filled: true,
                             fillColor: secondaryColor,
+                            errorStyle: const TextStyle(
+                              fontSize: 16.0,          // Increases the text size (Default is usually 12.0)
+                              fontWeight: FontWeight.w500, // Optional: Makes it slightly bolder/more readable
+                            ),
                           ),
+                            validator: (String? value) {
+
+                              if (value == null || value.isEmpty) {
+                                return "Please enter a password";
+                              }
+
+                              if (value.length < 8) {
+                                return "Password must be at least 8 characters long";
+                              }
+
+                              // 1. Check for at least one uppercase letter
+                              if (!RegExp(r'(?=.*[A-Z])').hasMatch(value)) {
+                                return "Must contain at least one capital letter";
+                              }
+
+                              // 2. Check for at least one number
+                              if (!RegExp(r'(?=.*\d)').hasMatch(value)) {
+                                return "Must contain at least one number";
+                              }
+
+                              // 3. Check for at least one special character
+                              if (!RegExp(r'(?=.*[!@#\$&*~])').hasMatch(value)) {
+                                return "Must contain at least one special character (!@#\$&*~)";
+                              }
+
+                              return null; // Password is perfectly valid!
+
+                            }
                         ),
                       ),
-          
-                      // space
-                      Text('\n'),
 
                       // SIGNUP BUTTON
                       Padding(
-                        padding: const EdgeInsets.all(25.0),
+                        padding: const EdgeInsets.all(10),
                         child: ElevatedButton(
                           // If input is valid, provide navigation.
                           // Otherwise, null (greys it out).
@@ -234,6 +354,8 @@ class SignupScreenState extends State<SignupScreen>
                             )
                         ),
                       ),
+
+                      Text('\n\n\n'),
           
                       TextButton(
                         onPressed: () {
