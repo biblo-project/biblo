@@ -4,6 +4,8 @@ import 'theme.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 Future<String?> authenticateUser(String username_or_email, String password) async {
   // Remember: 10.0.2.2 points your Android emulator to your computer's backend
   final url = Uri.parse('http://10.0.2.2:8000/auth/login');
@@ -199,7 +201,8 @@ class LoginScreenState extends State<LoginScreen>
 
                             // Grab the navigator instance immediately BEFORE the async gap
                             final navigator = Navigator.of(context);
-                            final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+                            const secureStorage = FlutterSecureStorage();
 
                             // Now, call your function using the actual text from your controllers
                             // we use 'await' because we have to wait for the network response
@@ -213,6 +216,10 @@ class LoginScreenState extends State<LoginScreen>
                               if(!context.mounted) return;
 
                               if(token != null){
+                                // save the token to the device here
+                                await secureStorage.write(key: 'auth_token', value: token);
+
+                                // navigate away safely
                                 navigator.pushReplacementNamed('/home');
                               }
 
