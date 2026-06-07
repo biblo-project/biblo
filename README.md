@@ -204,3 +204,48 @@ backend/
 ```
 py -m pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv alembic passlib[bcrypt] python-jose[cryptography]
 ```
+
+## Biblo — Kafka & OpenSearch Integration Plan
+### Overview
+* PostgreSQL remains the primary database and source of truth.
+* Kafka and OpenSearch are additions that enhance performance and intelligence — they do not replace PostgreSQL.
+
+### 1. Apache Kafka
+**Role:** Message broker that captures user activity as real-time events.
+**Where it fits:**
+
+* Every meaningful user action generates a Kafka event
+* These events continuously feed the ML recommendation engine with live user behaviour data
+
+**Events to track:**
+```
+user_viewed_book
+user_played_game
+user_updated_preferences
+user_saved_book
+```
+**When to add:** After the curated (ML-based) recommendations are working.
+
+### 2. OpenSearch
+**Role:** Powers fast book search and recommendation display.
+**Where it fits:**
+
+* Handles book search queries instead of querying PostgreSQL directly (faster at scale)
+* Supports fuzzy search — typos still return correct results
+* Can power the curated recommendations display layer
+
+**When to add:** After book search is working with PostgreSQL.
+
+### How the full stack connects
+User action (Flutter)
+→ FastAPI
+→ Kafka (logs the event)
+→ ML module (reads Kafka events, updates recommendations)
+→ OpenSearch (indexes and serves results)
+→ Flutter displays results
+
+### Technology summary
+
+**PostgreSQL** — permanent data storage (users, books, preferences, game scores)
+**OpenSearch** — fast search and retrieval layer on top of PostgreSQL data
+**Kafka** — real-time event streaming layer feeding the ML module
