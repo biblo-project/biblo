@@ -249,3 +249,53 @@ User action (Flutter)
 **PostgreSQL** — permanent data storage (users, books, preferences, game scores)
 **OpenSearch** — fast search and retrieval layer on top of PostgreSQL data
 **Kafka** — real-time event streaming layer feeding the ML module
+
+## Updated DB design
+
+### Tables:
+```
+users
+├── id
+├── email
+├── hashed_password
+└── username
+
+user_genres
+├── id
+├── user_id → (foreign key to users.id)
+└── genre
+
+books
+├── id
+├── title
+└── author
+
+book_genres
+├── id
+├── book_id → (foreign key to books.id)
+└── genre
+
+reading_list
+├── id
+├── user_id → (foreign key to users.id)
+├── book_id → (foreign key to books.id)
+└── status  → (to_read / reading / read)
+```
+
+### Relationships:
+``` 
+users ──────< user_genres
+
+users ──────< reading_list >────── books
+                                      │
+                                   book_genres
+```
+
+### Notes:
+
+* book_genres and user_genres follow the same pattern — one row per genre instead of a comma-separated string
+* reading_list is a junction table between users and books — it handles the many-to-many relationship
+* One user can have many reading list entries 
+* One book can appear in many users' lists 
+* One book can have many genres 
+* One user can have many preferred genres 
