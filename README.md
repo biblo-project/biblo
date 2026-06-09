@@ -268,12 +268,18 @@ user_genres
 books
 ├── id
 ├── title
-└── author
+├── author
+└── description   
 
 book_genres
 ├── id
 ├── book_id → (foreign key to books.id)
 └── genre
+
+quotes
+├── id
+├── book_id → (foreign key to books.id)
+└── quote_text
 
 reading_list
 ├── id
@@ -286,9 +292,11 @@ reading_list
 ``` 
 users ──────< user_genres
 
+books ──────< book_genres
+
+books ──────< quotes
+
 users ──────< reading_list >────── books
-                                      │
-                                   book_genres
 ```
 
 ### Notes:
