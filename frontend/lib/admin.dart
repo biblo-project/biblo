@@ -50,6 +50,9 @@ class AdminScreen extends StatelessWidget {
 
                   // SELECT GENRES BUTTON
                   const BasicButton(route: '/select_genres', title: 'SELECT GENRES'),
+
+                  // RANDOM SUGGESTIONS BUTTON
+                  const BasicButton(route: '/random_suggestions', title: 'RANDOM SUGGESTIONS')
                 ]
             )
         )

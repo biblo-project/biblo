@@ -14,7 +14,17 @@ class _SelectGenresScreenState extends State<SelectGenresScreen> {
   final List<String> _allGenres = [
     'Thriller', 'Romance', 'Sci-Fi', 'Horror', 'Fantasy',
     'Psychological', 'Fiction', 'Non-Fiction', 'Historical',
-    'Mystery', 'Comedy', 'Drama', 'Cyberpunk', 'Noir', 'Classic'
+    'Mystery', 'Comedy', 'Drama', 'Cyberpunk', 'Noir', 'Classic',
+    'Political', 'Unsettling', 'Drama', 'Magic', 'Gothic', 'Tragic',
+    'Mythology', 'Biography', 'Self-Help', 'Science', 'Utopian',
+    'Dystopian', 'Heroic', 'Epic', 'Ballad', 'Sonnet', 'Folklore',
+    'Autobiography', 'Ode', 'Fable', 'Bildungsroman', 'Western',
+    'Magical Realism', 'Realism', 'Poetry', 'Speculative Fiction',
+    'Epistolary', 'Action & Adventure', 'Black Comedy', 'Anthology',
+    'Crime', 'Erotica', 'Legal', 'Medical', 'Satire', 'Sports',
+    'Superhero', 'War', 'Short stories', 'Sagas', 'Religious',
+    'LGBTQ+', 'Comic', 'Graphic', 'Cultural Heritage', 'Travelogue',
+    'Alternative'
   ];
 
   // The Selection Memory (The "Go Wild" Storage)
@@ -24,113 +34,114 @@ class _SelectGenresScreenState extends State<SelectGenresScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: primaryColor,
+      // FIX 1: Wrap the entire body in a SafeArea + Column, NOT a scroll view
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25.0),
         child: Column(
-          children: [
-
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(25.0),
-              child: Text(
-                'What do you like to read?\n',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-
-            Text(
-              'Select as many as you want!\n',
-              style: TextStyle(color: textColor, fontSize: 25),
-            ),
-
-            // THE WRAP SECTION
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Wrap(
-                  spacing: 10,    // Horizontal space between chips
-                  runSpacing: 10, // Vertical space between lines
-                  alignment: WrapAlignment.center,
-                  children: _allGenres.map((genre) {
-                    final bool isSelected = _selectedGenres.contains(genre);
-
-                    return FilterChip(
-                      label: Text(genre),
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.indigo.shade900 : primaryColor,
-                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
-                        fontSize: 20,
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(25.0),
+                    child: Text(
+                      'What do you like to read?\n',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
                       ),
-                      selected: isSelected,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          if (selected) {
-                            _selectedGenres.add(genre);
-                          } else {
-                            _selectedGenres.remove(genre);
-                          }
-                        });
+                    ),
+                  ),
+
+                  Text(
+                    'Select as many as you want!\n',
+                    style: TextStyle(color: textColor, fontSize: 25),
+                  ),
+
+                  // THE WRAP SECTION
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Wrap(
+                        spacing: 10,    // Horizontal space between chips
+                        runSpacing: 10, // Vertical space between lines
+                        alignment: WrapAlignment.center,
+                        children: _allGenres.map((genre) {
+                          final bool isSelected = _selectedGenres.contains(genre);
+
+                          return FilterChip(
+                            label: Text(genre),
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.indigo.shade900 : primaryColor,
+                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
+                              fontSize: 20,
+                            ),
+                            selected: isSelected,
+                            onSelected: (bool selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedGenres.add(genre);
+                                } else {
+                                  _selectedGenres.remove(genre);
+                                }
+                              });
+                            },
+                            // Styling to match your Biblo theme
+                            backgroundColor: secondaryColor,
+                            selectedColor: Colors.lightBlueAccent,
+                            showCheckmark: false,
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                color: isSelected ? secondaryColor : Colors.grey,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+
+                  // Bottom Action Elements remain pinned below the scrolling zone
+                  Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: ElevatedButton(
+                      onPressed: _selectedGenres.isNotEmpty
+                          ? () { Navigator.pushNamed(context, '/home'); }
+                          : null, // Greys out if nothing is selected
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: secondaryColor,
+                        foregroundColor: buttonTextColor,
+                        disabledBackgroundColor: Colors.grey.shade800,
+                        disabledForegroundColor: Colors.white,
+                      ),
+                      child: const Text(
+                          'SUBMIT',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold
+                          )
+                      ),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/home');
                       },
-                      // Styling to match your Biblo theme
-                      backgroundColor: secondaryColor,
-                      selectedColor: Colors.lightBlueAccent,
-                      showCheckmark: false,
-                      shape: StadiumBorder(
-                        side: BorderSide(
-                          color: isSelected ? secondaryColor : Colors.grey,
+                      child: const Text(
+                        'Skip for now?',
+                        style: TextStyle(
+                          color: Colors.lightBlueAccent, // Traditional link color
+                          decoration: TextDecoration.underline, // Adds the underline
+                          fontSize: 20,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
+                    ),
+                  )
+                ],
               ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: ElevatedButton(
-                onPressed: _selectedGenres.isNotEmpty
-                    ? () { Navigator.pushNamed(context, '/home'); }
-                    : null, // Greys out if nothing is selected
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: secondaryColor,
-                  foregroundColor: buttonTextColor,
-                  disabledBackgroundColor: Colors.grey.shade800,
-                  disabledForegroundColor: Colors.white,
-                ),
-                child: const Text(
-                    'SUBMIT',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold
-                    )
-                ),
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/home');
-                },
-                child: const Text(
-                  'Skip for now?',
-                  style: TextStyle(
-                    color: Colors.lightBlueAccent, // Traditional link color
-                    decoration: TextDecoration.underline, // Adds the underline
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-            )
-          ],
-        ),
       ),
     );
   }

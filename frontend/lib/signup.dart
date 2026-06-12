@@ -302,7 +302,7 @@ class SignupScreenState extends State<SignupScreen>
                               }
 
                               // 3. Check for at least one special character
-                              if (!RegExp(r'(?=.*[!@#\$&*~])').hasMatch(value)) {
+                              if (!RegExp(r'(?=.*[!@#$&*~])').hasMatch(value)) {
                                 return "Must contain at least one special character (!@#\$&*~)";
                               }
 
@@ -342,7 +342,7 @@ class SignupScreenState extends State<SignupScreen>
                                 // Pop the signup screen off the stack and reveal/push the login screen
                                 navigator.pushReplacementNamed('/login');
 
-                                // Optional: Show a quick confirmation snackbar message
+                                // Optional: Show a quick confirmation snack bar message
                                 scaffoldMessenger.showSnackBar(
                                   const SnackBar(content: Text('Account created! Please log in.')),
                                 );

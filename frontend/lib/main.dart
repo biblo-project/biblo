@@ -1,5 +1,6 @@
 import 'package:biblo/about_me.dart';
 import 'package:biblo/avatar_selection.dart';
+import 'package:biblo/random_suggestions.dart';
 import 'package:biblo/select_genres.dart';
 
 import 'profile_picture_updation.dart';
@@ -33,6 +34,7 @@ class Biblo extends StatelessWidget {
           '/avatar_selection': (context) => const AvatarSelectionScreen(),
           '/about_me': (context) => const AboutMeScreen(),
           '/select_genres': (context) => const SelectGenresScreen(),
+          '/random_suggestions': (context) => const RandomSuggestionsScreen(),
           /*
           1. You added 'const' to the screen constructors inside routes (e.g. StartScreen())
           2. If your screen constructors support const, it's a good habit to add it
