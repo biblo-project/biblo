@@ -15,6 +15,17 @@ class BookData {
     required this.description,
     required this.isLiked,
   });
+
+  // Add this factory constructor to map database fields into your widget properties
+  factory BookData.fromJson(Map<String, dynamic> json) {
+    return BookData(
+      id: json['id'],
+      title: json['title'],
+      author: json['author'],
+      description: json['description'],
+      isLiked: false, // Defaulting to false until hooked up to a likes table
+    );
+  }
 }
 
 class Book extends StatelessWidget {
@@ -43,7 +54,7 @@ class Book extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: textColor,
-              fontSize: 38, // Increased font size for dramatic hierarchy
+              fontSize: 30, // Increased font size for dramatic hierarchy
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -55,7 +66,7 @@ class Book extends StatelessWidget {
             book.author,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 22,
+              fontSize: 18,
               fontStyle: FontStyle.italic,
               fontWeight: FontWeight.bold
             ),
@@ -131,7 +142,7 @@ class Book extends StatelessWidget {
                 child: Text(
                   book.description,
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 15,
                     color: Colors.white,
                   ),
                 ),

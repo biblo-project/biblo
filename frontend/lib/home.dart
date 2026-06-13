@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
                   // BUTTON TO GET A RANDOM SUGGESTION
                   Padding(
                     padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/home', title: 'Get a random suggestion'),
+                    child: const BasicButton(route: '/random_suggestions', title: 'Get a random suggestion'),
                   ),
 
                   // BUTTON TO GET A CURATED SUGGESTION
