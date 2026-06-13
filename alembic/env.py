@@ -20,6 +20,11 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 from backend.database import Base
 from backend.models.user import User
+from backend.models.user_genre import UserGenre
+from backend.models.book import Book
+from backend.models.book_genre import BookGenre
+from backend.models.quote import Quote
+from backend.models.reading_list import ReadingList
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

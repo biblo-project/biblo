@@ -9,6 +9,8 @@ class Quote(Base):
     book_id = Column(Integer, ForeignKey("books.id"))
     quote_text = Column(String)
 
+    # Relationship back to parent
+    book = relationship("Book", back_populates="quote")
 '''
 A Model represents what your data looks like inside the database. 
 This defines the exact structure of the quotes table in PostgreSQL.
@@ -19,5 +21,3 @@ down database insertions. Leave indexing for IDs, emails, usernames,
 and statuses.
 '''
 
-# Relationship back to parent
-book = relationship("Book", back_populates="quote")

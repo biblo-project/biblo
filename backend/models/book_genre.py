@@ -9,5 +9,5 @@ class BookGenre(Base):
     book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
     genre = Column(String, nullable=False)
 
-# relationship back to parent
-book = relationship("Book", back_populates="book_genre")
+    # relationship back to parent
+    book = relationship("Book", back_populates="book_genre")

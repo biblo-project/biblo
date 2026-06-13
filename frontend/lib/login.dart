@@ -140,7 +140,7 @@ class LoginScreenState extends State<LoginScreen>
 
                           // If they typed an '@', treat it strictly as an email format check
                           if (value.contains('@')) {
-                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
                             if (!emailRegex.hasMatch(value)) {
                               return 'Please enter a valid email address';
                             }
@@ -217,7 +217,7 @@ class LoginScreenState extends State<LoginScreen>
 
                               if(token != null){
                                 // save the token to the device here
-                                await secureStorage.write(key: 'auth_token', value: token);
+                                await secureStorage.write(key: 'access_token', value: token);
 
                                 // navigate away safely
                                 navigator.pushReplacementNamed('/home');

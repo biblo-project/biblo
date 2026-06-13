@@ -10,10 +10,11 @@ class UserGenre(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     genre = Column(String)
 
+    # relationship back to parent
+    user = relationship("User", back_populates="user_genre")
+
 '''
 A Model represents what your data looks like inside the database. 
 This defines the exact structure of the user_genres table in PostgreSQL.
 '''
 
-# relationship back to parent
-user = relationship("User", back_populates="user_genre")

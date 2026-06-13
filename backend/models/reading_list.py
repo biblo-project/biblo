@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, ForeignKey, Boolean, Enum
+from sqlalchemy import Column, Integer, ForeignKey, Enum
 from ..database import Base
 from sqlalchemy.orm import relationship
 
@@ -16,11 +16,12 @@ class ReadingList(Base):
     book_id = Column(Integer, ForeignKey("books.id"))
     status = Column(Enum(ReadingStatus), index=True, nullable=False, default=ReadingStatus.to_read)
 
+    # Relationships to tie everything together
+    user = relationship("User", back_populates="reading_list")
+    book = relationship("Book", back_populates="reading_list")
+
 '''
 A Model represents what your data looks like inside the database. 
-This defines the exact structure of the reading_lists table in PostgreSQL.
+This defines the exact structure of the reading_lists table in PostgresSQL.
 '''
 
-# Relationships to tie everything together
-user = relationship("User", back_populates="reading_list")
-book = relationship("Book", back_populates="reading_list")

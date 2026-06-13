@@ -1,5 +1,8 @@
+import 'services/token_service.dart';
 import 'theme.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SelectGenresScreen extends StatefulWidget {
   const SelectGenresScreen({super.key});
@@ -29,6 +32,53 @@ class _SelectGenresScreenState extends State<SelectGenresScreen> {
 
   // The Selection Memory (The "Go Wild" Storage)
   final Set<String> _selectedGenres = {};
+
+// --- API CONNECTION PIPELINE ---
+  Future<void> _submitGenres() async {
+
+    try {
+      // 2. RETRIEVE THE SECURE TOKEN REAL-TIME
+      final String? secureToken = await TokenService.getToken();
+
+      // Safety check: If the token doesn't exist, kick them back to login or throw an error
+      if (secureToken == null) {
+        if (mounted) {
+          // 1. Clear the entire page stack context history and force push the login screen
+          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+        }
+        return; // Stop running the rest of the network submission function
+      }
+
+      final response = await http.put(
+        Uri.parse('http://10.0.2.2:8000/genres/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $secureToken', // Injected safely here!
+        },
+        body: jsonEncode({
+          'genres': _selectedGenres.toList(),
+          'allow_unrestricted': true,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          Navigator.pushNamed(context, '/home');
+        }
+      } else {
+        throw Exception('Server rejected genre payload: Code ${response.statusCode}');
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update configurations: $error'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,11 +153,17 @@ class _SelectGenresScreenState extends State<SelectGenresScreen> {
 
                   // Bottom Action Elements remain pinned below the scrolling zone
                   Padding(
-                    padding: const EdgeInsets.all(15.0),
+                    padding: const EdgeInsets.all(10.0),
                     child: ElevatedButton(
-                      onPressed: _selectedGenres.isNotEmpty
-                          ? () { Navigator.pushNamed(context, '/home'); }
+                      onPressed:
+
+                      _selectedGenres.isNotEmpty
+                          ? () async {
+                        // Call your API method to submit genres to FastAPI
+                        await _submitGenres();
+                      }
                           : null, // Greys out if nothing is selected
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor: secondaryColor,
                         foregroundColor: buttonTextColor,
