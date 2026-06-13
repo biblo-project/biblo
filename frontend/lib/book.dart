@@ -1,5 +1,6 @@
 import 'theme.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BookData {
   final int id;
@@ -123,8 +124,12 @@ class Book extends StatelessWidget {
                     iconSize: 45,
                     icon: const Icon(Icons.shopping_cart_outlined),
                     color: Colors.white,
-                    onPressed: () {
-
+                    onPressed: () async {
+                      final query = Uri.encodeComponent('buy "${book.title}" by ${book.author}');
+                      final url = Uri.parse('https://www.google.com/search?q=$query');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
                     },
                   ),
 
