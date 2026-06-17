@@ -24,7 +24,7 @@ class BookData {
       title: json['title'],
       author: json['author'],
       description: json['description'],
-      isLiked: false, // Defaulting to false until hooked up to a likes table
+      isLiked: json['isLiked'] ?? false, // Reads live state from your FastAPI map loop
     );
   }
 }
@@ -51,8 +51,6 @@ class Book extends StatelessWidget {
           // 1. TITLE IN BOLD BIGGER FONT
           Text(
             book.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: textColor,
               fontSize: 30, // Increased font size for dramatic hierarchy

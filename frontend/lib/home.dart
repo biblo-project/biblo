@@ -46,6 +46,12 @@ class HomeScreen extends StatelessWidget {
                     child: const BasicButton(route: '/select_genres', title: 'Update my preferences'),
                   ),
 
+                  // SEARCH BOOKS
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: const BasicButton(route: '/search', title: 'Search'),
+                  ),
+
                   // BUTTON TO PLAY SOME GAMES
                   Padding(
                     padding: const EdgeInsets.all(5.0),

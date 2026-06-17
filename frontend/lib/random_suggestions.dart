@@ -86,6 +86,10 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
 
       if (response.statusCode == 200) {
         final List<dynamic> decodedData = jsonDecode(response.body);
+
+        // GUARD: Ensure the screen widget is still in the view tree before setting state
+        if (!mounted) return;
+
         setState(() {
           _books = decodedData.map((json) => BookData.fromJson(json)).toList();
 
@@ -100,6 +104,57 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
       setState(() {
         print("An error occurred: $e");
       });
+    }
+  }
+
+  // NEW METHOD: Hits your backend endpoint to write/delete rows in the reading_lists table
+  Future<void> _toggleBookLike(BookData book) async {
+    final originalStatus = book.isLiked;
+
+    setState(() {
+      book.isLiked = !book.isLiked;
+    });
+
+    try {
+      final url = Uri.parse('http://10.0.2.2:8000/books/${book.id}/toggle-like');
+      final String? token = await TokenService.getToken();
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      // GUARD 1: If the user navigated away during the HTTP request, stop execution quietly
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        // Match the state exactly with whatever the database finalized
+        setState(() {
+          book.isLiked = responseData['liked'];
+        });
+        print("Discovery sync complete: ${book.title} liked = ${book.isLiked}");
+      } else {
+        // Revert UI change if the backend fails (e.g., return code 404, 500)
+        setState(() {
+          book.isLiked = originalStatus;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update list status (${response.statusCode})')),
+        );
+      }
+    } catch (e) {
+      // Revert UI change if a network timeout/disconnection occurs
+      setState(() {
+        book.isLiked = originalStatus;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Network error: Could not reach backend server.')),
+      );
     }
   }
 
@@ -122,14 +177,7 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
                 return Book(
                   book: currentBook,
                   onLikeTapped: () {
-          
-                    // trigger state refresh on the parent screen
-                    setState(() {
-                      currentBook.isLiked = !currentBook.isLiked;
-                    });
-          
-                    // print statement to debug
-                    print("${currentBook.title} liked status: ${currentBook.isLiked}");
+                    _toggleBookLike(currentBook);
                   },
                 );
               }
