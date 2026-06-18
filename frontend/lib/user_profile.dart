@@ -215,7 +215,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      "My Reading List (To Read)",
+                      "My Preferences",
                       style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
