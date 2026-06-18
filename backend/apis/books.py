@@ -10,6 +10,18 @@ from backend.models.user import User
 from typing import Dict, Any
 from backend.models.reading_list import ReadingList, ReadingStatus
 
+# ML related libraries
+'''
+import pandas as pd
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
+
+# Include the models used by the ML engine
+from backend.models.user_genre import UserGenre
+from backend.models.book_genre import BookGenre
+'''
+
 router = APIRouter(prefix="/books", tags=["Books"])
 
 @router.get("/random", response_model=List[BookOut])
@@ -43,6 +55,65 @@ def get_random_books(
         )
 
     return books
+
+'''
+@router.get("/curated")
+def get_ml_recommendations(
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    # 1. Fetch User preferences
+    user_genres = db.query(UserGenre.genre).filter(UserGenre.user_id == current_user.id).all()
+    user_genre_list = [g[0] for g in user_genres]
+
+    if not user_genre_list:
+        return db.query(Book).limit(10).all() # Fallback if user profile is empty
+
+    # 2. Extract catalog data into a Pandas DataFrame for ML training
+    books = db.query(Book).all()
+    if len(books) < 2:
+        return books # Not enough data points to train a neighborhood map yet
+
+    book_data = []
+    for b in books:
+        # Pull all genres mapped to this specific book
+        bg_rows = db.query(BookGenre.genre).filter(BookGenre.book_id == b.id).all()
+        genre_string = " ".join([row[0] for row in bg_rows])
+
+        # Combine text fields into a single "feature soup" text block
+        feature_soup = f"{b.title} {b.author} {b.description} {genre_string}"
+
+        book_data.append({
+            "id": b.id,
+            "object": b, # Keep the SQLAlchemy instance to return later
+            "features": feature_soup
+        })
+
+    df = pd.DataFrame(book_data)
+
+    # 3. Vectorize the Text Metadata (TF-IDF Matrix construction)
+    tfidf = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = tfidf.fit_transform(df['features'])
+
+    # 4. Train the K-Nearest Neighbors Engine in-memory
+    # We use Cosine metric because it measures the directional angle of text profiles rather than raw size
+    knn = NearestNeighbors(n_neighbors=min(10, len(df)), metric='cosine', algorithm='brute')
+    knn.fit(tfidf_matrix)
+
+    # 5. Represent the logged in User as a text profile vector
+    user_profile_text = " ".join(user_genre_list)
+    user_vector = tfidf.transform([user_profile_text])
+
+    # 6. Calculate spatial distance coordinates
+    distances, indices = knn.kneighbors(user_vector)
+
+    # 7. Map the closest indices back to our original database objects
+    recommended_books = []
+    for idx in indices[0]:
+        recommended_books.append(df.iloc[idx]['object'])
+
+    return recommended_books
+'''
 
 @router.get("/search")
 def search_books(

@@ -306,4 +306,14 @@ users ──────< reading_list >────── books
 * One user can have many reading list entries 
 * One book can appear in many users' lists 
 * One book can have many genres 
-* One user can have many preferred genres 
+* One user can have many preferred genres
+
+## Explanation of curated recommendations ML logic
+Installed the following libraries:
+* scikit-learn
+* pandas
+* numpy
+
+```
+...
+```
