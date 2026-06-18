@@ -5,8 +5,29 @@ from backend.models.user import User
 from backend.models.user_genre import UserGenre
 from backend.schemas.genres import GenreSelection
 from backend.core.auth import get_current_user
+from backend.models.book_genre import BookGenre
 
 router = APIRouter(prefix="/genres", tags=["Genres"])
+
+@router.get("/")
+def get_genres_dashboard(
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+        # Now required to see personalization
+):
+    # 1. Gather all unique genres across your catalog
+    unique_genres = db.query(BookGenre.genre).distinct().order_by(BookGenre.genre.asc()).all()
+    all_genres_list = [g[0] for g in unique_genres]
+
+    # 2. Gather only the genres this specific user has selected
+    user_saved_genres = db.query(UserGenre.genre).filter(UserGenre.user_id == current_user.id).all()
+    user_genres_list = [ug[0] for ug in user_saved_genres]
+
+    # 3. Return a structured dictionary mapping both arrays
+    return {
+        "all_genres": all_genres_list,
+        "selected_genres": user_genres_list
+    }
 
 @router.put("/")
 def update_genres(

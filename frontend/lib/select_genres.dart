@@ -13,22 +13,62 @@ class SelectGenresScreen extends StatefulWidget {
 
 class _SelectGenresScreenState extends State<SelectGenresScreen> {
 
-  // The Data Source
-  final List<String> _allGenres = [
-    'Thriller', 'Romance', 'Sci-Fi', 'Horror', 'Fantasy',
-    'Psychological', 'Fiction', 'Non-Fiction', 'Historical',
-    'Mystery', 'Comedy', 'Drama', 'Cyberpunk', 'Noir', 'Classic',
-    'Political', 'Unsettling', 'Drama', 'Magic', 'Gothic', 'Tragic',
-    'Mythology', 'Biography', 'Self-Help', 'Science', 'Utopian',
-    'Dystopian', 'Heroic', 'Epic', 'Ballad', 'Sonnet', 'Folklore',
-    'Autobiography', 'Ode', 'Fable', 'Bildungsroman', 'Western',
-    'Magical Realism', 'Realism', 'Poetry', 'Speculative Fiction',
-    'Epistolary', 'Action & Adventure', 'Black Comedy', 'Anthology',
-    'Crime', 'Erotica', 'Legal', 'Medical', 'Satire', 'Sports',
-    'Superhero', 'War', 'Short stories', 'Sagas', 'Religious',
-    'LGBTQ+', 'Comic', 'Graphic', 'Cultural Heritage', 'Travelogue',
-    'Alternative'
-  ];
+  // The (Temporary) Data Source
+//  final List<String> _allGenres = [
+//    'Thriller', 'Romance', 'Sci-Fi', 'Horror', 'Fantasy',
+//    'Psychological', 'Fiction', 'Non-Fiction', 'Historical',
+//    'Mystery', 'Comedy', 'Drama', 'Cyberpunk', 'Noir', 'Classic',
+//    'Political', 'Unsettling', 'Drama', 'Magic', 'Gothic', 'Tragic',
+//    'Mythology', 'Biography', 'Self-Help', 'Science', 'Utopian',
+//    'Dystopian', 'Heroic', 'Epic', 'Ballad', 'Sonnet', 'Folklore',
+//    'Autobiography', 'Ode', 'Fable', 'Bildungsroman', 'Western',
+//    'Magical Realism', 'Realism', 'Poetry', 'Speculative Fiction',
+//    'Epistolary', 'Action & Adventure', 'Black Comedy', 'Anthology',
+//    'Crime', 'Erotica', 'Legal', 'Medical', 'Satire', 'Sports',
+//    'Superhero', 'War', 'Short stories', 'Sagas', 'Religious',
+//    'LGBTQ+', 'Comic', 'Graphic', 'Cultural Heritage', 'Travelogue',
+//    'Alternative'
+//  ];
+
+List<String> _allGenres = [];
+
+@override
+void initState() {
+  super.initState();
+  _fetchGenres(); // Trigger the fetch as soon as the screen allocates memory
+}
+
+Future<void> _fetchGenres() async {
+  try {
+    final url = Uri.parse('http://10.0.2.2:8000/genres/');
+    final String? secureToken = await TokenService.getToken();
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $secureToken', // Authenticates the user
+      },
+    );
+
+    if (!mounted) return;
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      setState(() {
+        // Extract the master list of options
+        _allGenres = List<String>.from(responseData['all_genres']);
+
+        // Clear and pre-populate your selection memory with their historical database records
+        _selectedGenres.clear();
+        _selectedGenres.addAll(List<String>.from(responseData['selected_genres']));
+      });
+    }
+  } catch (e) {
+    print("Error pulling dynamic genre configurations: $e");
+  }
+}
 
   // The Selection Memory (The "Go Wild" Storage)
   final Set<String> _selectedGenres = {};
@@ -116,7 +156,14 @@ class _SelectGenresScreenState extends State<SelectGenresScreen> {
                         spacing: 10,    // Horizontal space between chips
                         runSpacing: 10, // Vertical space between lines
                         alignment: WrapAlignment.center,
-                        children: _allGenres.map((genre) {
+                        children: _allGenres.isEmpty
+
+                            ? [const Center(child: Padding(
+                          padding: EdgeInsets.only(top: 40.0),
+                          child: CircularProgressIndicator(color: Colors.white),
+                        ))]
+
+                            : _allGenres.map((genre) {
                           final bool isSelected = _selectedGenres.contains(genre);
 
                           return FilterChip(

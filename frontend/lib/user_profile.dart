@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:biblo/select_genres.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'theme.dart'; // Holds your primaryColor, textColor, etc.
@@ -187,6 +188,46 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
           const SizedBox(height: 16),
           const Divider(color: Colors.white, height: 1),
+          const SizedBox(height: 16),
+
+          // 5. ROW-WISE NAVIGATION TO GENRES CHIPS SCREEN LINK
+          InkWell(
+            onTap: () {
+              print("Navigating to Genres Chips Screen...");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SelectGenresScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.bookmark_outline, color: Colors.redAccent),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      "My Reading List (To Read)",
+                      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white, height: 1),
+          const SizedBox(height: 16),
         ],
       ),
     );
