@@ -58,6 +58,12 @@ class HomeScreen extends StatelessWidget {
                     child: const BasicButton(route: '/games', title: 'Play some games'),
                   ),
 
+                  // BUTTON TO VIEW USER PROFILE
+                  Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: const BasicButton(route: '/user_profile', title: 'View my profile'),
+                  ),
+
                   Text('\n\n\n\n\n\n\n\n'),
 
                   Padding(

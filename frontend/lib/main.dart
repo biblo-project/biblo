@@ -12,6 +12,7 @@ import 'signup.dart';
 import 'home.dart';
 import 'games.dart';
 import 'admin.dart';
+import 'user_profile.dart';
 
 void main() {
   runApp(const Biblo());
@@ -37,6 +38,7 @@ class Biblo extends StatelessWidget {
           '/select_genres': (context) => const SelectGenresScreen(),
           '/random_suggestions': (context) => const RandomSuggestionsScreen(),
           '/search': (context) => const SearchScreen(),
+          '/user_profile': (context) => const UserProfileScreen(),
           /*
           1. You added 'const' to the screen constructors inside routes (e.g. StartScreen())
           2. If your screen constructors support const, it's a good habit to add it
