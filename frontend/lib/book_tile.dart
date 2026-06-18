@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'book.dart'; // Holds your BookData class definition
 import 'theme.dart'; // Holds your primaryColor, textColor, etc.
+import 'package:url_launcher/url_launcher.dart';
 
-class SearchResultBookTile extends StatelessWidget {
+class BookTile extends StatelessWidget {
   final BookData book;
   final VoidCallback onLikeTapped;
 
-  const SearchResultBookTile({
+  const BookTile({
     super.key,
     required this.book,
     required this.onLikeTapped,
@@ -49,8 +50,6 @@ class SearchResultBookTile extends StatelessWidget {
               children: [
                 Text(
                   book.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: textColor,
                     fontSize: 16.0,
@@ -61,7 +60,7 @@ class SearchResultBookTile extends StatelessWidget {
                 Text(
                   book.author,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white,
                     fontSize: 14.0,
                     fontStyle: FontStyle.italic,
                   ),
@@ -73,11 +72,28 @@ class SearchResultBookTile extends StatelessWidget {
           const SizedBox(width: 8.0),
 
           // 3. LIKE BUTTON TO ADD THE BOOK TO THE USER'S TO_READ LIST
-          IconButton(
-            iconSize: 28,
-            icon: Icon(book.isLiked ? Icons.favorite : Icons.favorite_border),
-            color: book.isLiked ? Colors.redAccent : Colors.white,
-            onPressed: onLikeTapped,
+          Column(
+            children: [
+
+              IconButton(
+                iconSize: 28,
+                icon: Icon(book.isLiked ? Icons.favorite : Icons.favorite_border),
+                color: book.isLiked ? Colors.redAccent : Colors.white,
+                onPressed: onLikeTapped,
+              ),
+
+              IconButton(
+                  onPressed: () async {
+                    final query = Uri.encodeComponent('buy "${book.title}" by ${book.author}');
+                    final url = Uri.parse('https://www.google.com/search?q=$query');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                    },
+                  icon: Icon(Icons.shopping_cart),
+                color: Colors.white,
+              )
+            ],
           ),
         ],
       ),

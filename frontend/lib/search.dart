@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'book.dart'; // Contains your BookData model and custom tile widget
 import 'services/token_service.dart';
-import 'search_result_book_tile.dart';
+import 'book_tile.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -189,7 +189,7 @@ class _SearchScreenState extends State<SearchScreen> {
       itemBuilder: (context, index) {
         final currentBook = _searchResults[index];
 
-        return SearchResultBookTile(
+        return BookTile(
           book: currentBook,
           onLikeTapped: () => _toggleBookLike(currentBook),
         );

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'book.dart'; // Holds your BookData model
 import 'services/token_service.dart';
-import 'search_result_book_tile.dart'; // Reusing your beautiful stateless tile widget!
+import 'book_tile.dart'; // Reusing your beautiful stateless tile widget!
 
 class ToReadListScreen extends StatefulWidget {
   const ToReadListScreen({super.key});
@@ -148,7 +148,7 @@ class _ToReadListScreenState extends State<ToReadListScreen> {
         final currentBook = _readingList[index];
 
         // Reuses your customized long-title fix and layout alignment
-        return SearchResultBookTile(
+        return BookTile(
           book: currentBook,
           onLikeTapped: () => _removeItemFromList(currentBook),
         );
