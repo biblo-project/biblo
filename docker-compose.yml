@@ -1,0 +1,62 @@
+services:
+  biblo-opensearch-node1:
+    image: opensearchproject/opensearch:latest
+    container_name: biblo-opensearch-node1
+    environment:
+      - cluster.name=biblo-opensearch-cluster
+      - node.name=biblo-opensearch-node1
+      - discovery.seed_hosts=biblo-opensearch-node2,biblo-opensearch-node3
+      - cluster.initial_master_nodes=biblo-opensearch-node1,biblo-opensearch-node2,biblo-opensearch-node3
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
+      - "DISABLE_INSTALL_DEMO_CONFIG=false"
+    ports:
+      - 9200:9200
+      - 9600:9600
+    networks:
+      - biblo-opensearch-network
+
+  biblo-opensearch-node2:
+    image: opensearchproject/opensearch:latest
+    container_name: biblo-opensearch-node2
+    environment:
+      - cluster.name=biblo-opensearch-cluster
+      - node.name=biblo-opensearch-node2
+      - discovery.seed_hosts=biblo-opensearch-node1,biblo-opensearch-node3
+      - cluster.initial_master_nodes=biblo-opensearch-node1,biblo-opensearch-node2,biblo-opensearch-node3
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPOSEARCH_PASSWORD}
+    networks:
+      - biblo-opensearch-network
+
+  biblo-opensearch-node3:
+    image: opensearchproject/opensearch:latest
+    container_name: biblo-opensearch-node3
+    environment:
+      - cluster.name=biblo-opensearch-cluster
+      - node.name=biblo-opensearch-node3
+      - discovery.seed_hosts=biblo-opensearch-node1,biblo-opensearch-node2
+      - cluster.initial_master_nodes=biblo-opensearch-node1,biblo-opensearch-node2,biblo-opensearch-node3
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
+    networks:
+      - biblo-opensearch-network
+
+  # === ADDED OPENSEARCH DASHBOARDS FRONTEND ===
+  biblo-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: biblo-dashboards
+    ports:
+      - 5601:5601 # Exposes the web interface to your browser at http://localhost:5601
+    environment:
+      # Points Dashboards to Node 1 inside the Docker network using HTTPS
+      - OPENSEARCH_HOSTS=["https://biblo-opensearch-node1:9200"]
+      # Credentials used by Dashboards to talk to the cluster
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}
+    networks:
+      - biblo-opensearch-network
+    depends_on:
+      - biblo-opensearch-node1 # Ensures Node 1 boots up before Dashboards tries to connect
+
+networks:
+  biblo-opensearch-network:
+    driver: bridge
+    
