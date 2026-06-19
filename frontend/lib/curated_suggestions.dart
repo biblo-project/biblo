@@ -19,7 +19,7 @@ class _CuratedSuggestionsScreenState extends State<CuratedSuggestionsScreen> {
   @override
   void initState() {
     super.initState(); // FIX: Changed 'super.key;' to 'super.initState();'
-    _fetchRandomBooks();
+    _fetchCuratedBooks();
   }
   /*
   NOTE:
@@ -29,9 +29,9 @@ class _CuratedSuggestionsScreenState extends State<CuratedSuggestionsScreen> {
    */
 
   // HTTP Request fetching from your FastAPI backend
-  Future<void> _fetchRandomBooks() async {
+  Future<void> _fetchCuratedBooks() async {
     try {
-      final url = Uri.parse('http://10.0.2.2:8000/books/random');
+      final url = Uri.parse('http://10.0.2.2:8000/books/curated');
       // 10.0.2.2 points to local machine from Android Emulator
 
       // Fetch your saved token from your storage service

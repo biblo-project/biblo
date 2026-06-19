@@ -1,5 +1,6 @@
 import 'package:biblo/about_me.dart';
 import 'package:biblo/avatar_selection.dart';
+import 'package:biblo/curated_suggestions.dart';
 import 'package:biblo/random_suggestions.dart';
 import 'package:biblo/search.dart';
 import 'package:biblo/select_genres.dart';
@@ -37,6 +38,7 @@ class Biblo extends StatelessWidget {
           '/about_me': (context) => const AboutMeScreen(),
           '/select_genres': (context) => const SelectGenresScreen(),
           '/random_suggestions': (context) => const RandomSuggestionsScreen(),
+          '/curated_suggestions': (context) => const CuratedSuggestionsScreen(),
           '/search': (context) => const SearchScreen(),
           '/user_profile': (context) => const UserProfileScreen(),
           /*

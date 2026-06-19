@@ -11,7 +11,7 @@ from typing import Dict, Any
 from backend.models.reading_list import ReadingList, ReadingStatus
 
 # ML related libraries
-'''
+
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -20,7 +20,6 @@ from sklearn.neighbors import NearestNeighbors
 # Include the models used by the ML engine
 from backend.models.user_genre import UserGenre
 from backend.models.book_genre import BookGenre
-'''
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
@@ -56,7 +55,6 @@ def get_random_books(
 
     return books
 
-'''
 @router.get("/curated")
 def get_ml_recommendations(
         db: Session = Depends(get_db),
@@ -97,7 +95,7 @@ def get_ml_recommendations(
 
     # 4. Train the K-Nearest Neighbors Engine in-memory
     # We use Cosine metric because it measures the directional angle of text profiles rather than raw size
-    knn = NearestNeighbors(n_neighbors=min(10, len(df)), metric='cosine', algorithm='brute')
+    knn = NearestNeighbors(n_neighbors=min(5, len(df)), metric='cosine', algorithm='brute')
     knn.fit(tfidf_matrix)
 
     # 5. Represent the logged in User as a text profile vector
@@ -113,7 +111,6 @@ def get_ml_recommendations(
         recommended_books.append(df.iloc[idx]['object'])
 
     return recommended_books
-'''
 
 @router.get("/search")
 def search_books(
