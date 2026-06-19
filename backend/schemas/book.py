@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class BookOut(BaseModel):
     id: int
@@ -23,3 +24,9 @@ connected quotes array), and serialize those complex database objects
 into nested JSON payloads for your Flutter frontend without requiring 
 you to write manual data-parsing or database join logic.
 '''
+
+class BookCreate(BaseModel):
+    title: str
+    author: str
+    description: Optional[str] = None
+    isbn: Optional[str] = None

@@ -21,7 +21,14 @@ from sklearn.neighbors import NearestNeighbors
 from backend.models.user_genre import UserGenre
 from backend.models.book_genre import BookGenre
 
+from backend.schemas.book import BookCreate, BookOut
+from backend.models.book import Book # Your SQLAlchemy Model
+from backend.database import get_db   # Your DB Session Yield hook
+
 router = APIRouter(prefix="/books", tags=["Books"])
+
+#_____________________________________________________________________________________________________
+# GET RANDOM RECS
 
 @router.get("/random", response_model=List[BookOut])
 def get_random_books(
@@ -54,6 +61,9 @@ def get_random_books(
         )
 
     return books
+
+#_____________________________________________________________________________________________________
+# GET CURATED RECS
 
 @router.get("/curated")
 def get_curated_books(
@@ -112,6 +122,9 @@ def get_curated_books(
 
     return recommended_books
 
+#_____________________________________________________________________________________________________
+# SEARCH BOOKS
+
 @router.get("/search")
 def search_books(
         q: str = Query(..., description="The search string"),
@@ -150,6 +163,9 @@ def search_books(
         })
 
     return output
+
+#_____________________________________________________________________________________________________
+# LIKE/UNLIKE BOOKS
 
 @router.post("/{book_id}/toggle-like", status_code=status.HTTP_200_OK)
 def toggle_like_book(
@@ -199,3 +215,48 @@ def toggle_like_book(
             "liked": True,
             "message": f"Successfully added '{book.title}' to your reading list as to_read."
         }
+
+#_____________________________________________________________________________________________________
+# ADD BOOKS TO DB    
+
+@router.post("", response_model=BookOut, status_code=status.HTTP_201_CREATED)
+def create_book(book_in: BookCreate, db: Session = Depends(get_db)) -> Any:
+    """
+    Creates a new book entry in the PostgreSQL database.
+    This action will serve as our future upstream event source for Kafka syncing.
+    """
+    # 1. Optional business logic check: Prevent duplicate ISBNs if provided
+    if book_in.isbn and book_in.isbn.strip():
+        existing_book = db.query(Book).filter(Book.isbn == book_in.isbn.strip()).first()
+        if existing_book:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A book record with this ISBN code already exists."
+            )
+
+    try:
+        # 2. Map the validated incoming Pydantic payload to your SQLAlchemy model instance
+        new_book = Book(
+            title=book_in.title.strip(),
+            author=book_in.author.strip(),
+            description=book_in.description.strip() if book_in.description else None,
+            isbn=book_in.isbn.strip() if book_in.isbn else None
+        )
+
+        # 3. Commit the entity to your transactional PostgreSQL database
+        db.add(new_book)
+        db.commit()
+        db.refresh(new_book) # Hydrates the instance with its new generated database 'id'
+
+        # 4. Return the database record (FastAPI automatically transforms this to your BookOut schema shape)
+        return new_book
+
+    except Exception as e:
+        db.rollback() # Safely roll back transaction context on fault
+        import logging
+        logger = logging.getLogger("uvicorn.error")
+        logger.error(f"Database write crash inside POST /books: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database write operation failed."
+        )

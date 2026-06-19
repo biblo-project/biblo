@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from opensearchpy import OpenSearch
 from typing import List
+from backend.core.auth import get_current_user
 
 # Import your existing client injector and your existing Pydantic schema
 from backend.core.opensearch import get_opensearch_client
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/search", tags=["Search"])
 @router.get("", response_model=List[BookOut])
 async def search_books(
     q: str = Query(..., description="The search term for titles or authors"),
+    current_user = Depends(get_current_user),
     client: OpenSearch = Depends(get_opensearch_client)
 ):
     """
