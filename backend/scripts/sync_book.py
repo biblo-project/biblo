@@ -16,7 +16,7 @@ DB_SETTINGS = {
 OPENSEARCH_HOST = "localhost"
 OPENSEARCH_PORT = 9200
 # Pull the admin password directly from your environment or copy your string here
-OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD", "opensearch@SRIS123") 
+OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD") 
 INDEX_NAME = "biblo_books"
 
 def get_opensearch_client():

@@ -1,13 +1,27 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 class Settings(BaseSettings):
     DATABASE_URL: str = Field(default=None)
     SECRET_KEY:str = Field(default=None)
 
-    class Config:
-        env_file = ".env"
+    # --- Add your OpenSearch environment mappings ---
+    OPENSEARCH_HOST: str = "localhost"
+    OPENSEARCH_PORT: int = 9200
+    OPENSEARCH_USER: str = "admin"
+    OPENSEARCH_PASSWORD: str = Field(default=None)
 
+    # Modern Pydantic configuration
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"  
+        # Keeps things clean by ignoring unrelated keys in your .env
+    )
+
+#    class Config:
+#        env_file = ".env"
+
+# single global instance used by your app
 settings = Settings()
 
 '''

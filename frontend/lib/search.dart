@@ -33,7 +33,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       // Encode the query parameters safely for web transport URLs
-      final url = Uri.parse('http://10.0.2.2:8000/books/search?q=${Uri.encodeComponent(query)}');
+      // final url = Uri.parse('http://10.0.2.2:8000/books/search?q=${Uri.encodeComponent(query)}');
+
+      // using a new URL after Opensearch integration
+      final url = Uri.parse('http://10.0.2.2:8000/search?q=${Uri.encodeComponent(query)}');
+
       final String? token = await TokenService.getToken();
 
       final response = await http.get(

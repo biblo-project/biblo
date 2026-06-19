@@ -23,7 +23,7 @@ services:
       - node.name=biblo-opensearch-node2
       - discovery.seed_hosts=biblo-opensearch-node1,biblo-opensearch-node3
       - cluster.initial_master_nodes=biblo-opensearch-node1,biblo-opensearch-node2,biblo-opensearch-node3
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPOSEARCH_PASSWORD}
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
     networks:
       - biblo-opensearch-network
 
@@ -59,4 +59,3 @@ services:
 networks:
   biblo-opensearch-network:
     driver: bridge
-    

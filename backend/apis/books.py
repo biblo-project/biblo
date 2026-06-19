@@ -56,7 +56,7 @@ def get_random_books(
     return books
 
 @router.get("/curated")
-def get_ml_recommendations(
+def get_curated_books(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
