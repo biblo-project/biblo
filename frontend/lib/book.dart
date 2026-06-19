@@ -1,7 +1,6 @@
 import 'theme.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class BookData {
   final int id;
@@ -97,31 +96,6 @@ class Book extends StatelessWidget {
                   ],
                 ),
 
-                /*
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  // 2. Swapped to Image.network with structured fallbacks
-                  child: Image.network(
-                    coverUrl,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[800],
-                        child: const Center(
-                          child: Icon(Icons.book, color: Colors.white54, size: 50),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                */
-
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
@@ -131,7 +105,7 @@ class Book extends StatelessWidget {
 
                     // 2. Simple loading layout
                     loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
+                      if (loadingProgress != null) return child;
                       return const Center(
                         child: CircularProgressIndicator(color: Colors.white),
                       );
@@ -140,7 +114,7 @@ class Book extends StatelessWidget {
                     // 3. Simple error layout if the ISBN doesn't exist
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: Colors.grey[800],
+                        color: Colors.grey,
                         child: const Center(
                           child: Icon(Icons.book, color: Colors.white54, size: 50),
                         ),

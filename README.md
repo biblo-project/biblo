@@ -314,6 +314,49 @@ Installed the following libraries:
 * pandas
 * numpy
 
-```
-...
-```
+Here is the step-by-step breakdown of how your machine learning recommendation endpoint processes data behind the scenes:
+
+### 1. User Authentication & Preference Extraction
+
+* **Route Protection:** The endpoint uses FastAPI dependencies (`Depends`) to verify the logged-in user and open a secure database connection.
+* **Preference Gathering:** It queries the database to see which genres the current user has selected.
+* **The Empty Guard:** If the user has not selected any genres yet, the engine skips the math entirely and simply returns a fallback list of 10 generic books.
+
+---
+
+### 2. Building the "Feature Soup" (Data Preparation)
+
+* **Database Gathering:** The code pulls your entire catalog of books out of PostgreSQL and converts it into a structured Pandas DataFrame.
+* **Text Merging:** For every single book, it gathers the title, author, description, and its mapped genres, joining them together into a long string called a **"feature soup."** This acts as the book's textual footprint.
+
+---
+
+### 3. Vectorization (TF-IDF Matrix Construction)
+
+* **Turning Words into Numbers:** Computers can't calculate mathematical distance on raw text, so the code initializes a `TfidfVectorizer`.
+* **Filtering Noise:** It strips out common, low-value words (like "the", "and", "is") using English `stop_words`.
+* **The Matrix:** It converts the text blocks into a huge numerical table (the `tfidf_matrix`) where every unique word represents a distinct geometric dimension, and the numbers represent how uniquely important that word is to that specific book.
+
+---
+
+### 4. Training the KNN Neighborhood Map
+
+* **Engine Configuration:** It spins up a $K$-Nearest Neighbors (`NearestNeighbors`) algorithm configured to look for the **5 closest matches** (`n_neighbors=5`).
+* **The Angle Calculation:** It uses the **`cosine` metric**, which measures the *angle* between text vectors in geometric space rather than word counts. This ensures a long book description and a short book description map perfectly if they use the same types of vocabulary.
+* **In-Memory Fitting:** It trains the engine (`knn.fit`) instantly on your book catalog matrix, mapping where every book sits relative to the others.
+
+---
+
+### 5. Creating the User Vector
+
+* **User Modeling:** The code grabs the user's selected genres and joins them into a single text string (e.g., `"Sci-Fi Cyberpunk"`).
+* **Dimensional Alignment:** It runs this text through the exact same `tfidf.transform` tool so the user's tastes are converted into a mathematical coordinate that exists inside the exact same geometric space as the books.
+
+---
+
+### 6. Distance Calculation & Recommendation Extraction
+
+* **The Query:** The code fires `knn.kneighbors(user_vector)`. The trained model drops the user's coordinate into the geometric web and calculates which 5 books have the smallest angular distance from the user.
+* **Returning Database Objects:** The algorithm returns a list of numerical index coordinates. The code takes those layout positions, grabs the original PostgreSQL SQLAlchemy `Book` objects out of the DataFrame, and drops them into a clean array.
+
+FastAPI automatically serializes these 5 database objects into JSON and sends them right down to your Flutter application's vertical layout!
