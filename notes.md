@@ -1655,3 +1655,236 @@ Change it to a clean, absolute import:
 ```
 from apis.auth import router as auth_router
 ```
+---
+## Keeping OpenSearch in Sync with PostgreSQL
+
+### The Question
+
+Once OpenSearch is connected to the project, how do we ensure that updates made to PostgreSQL are also reflected in OpenSearch?
+
+For example:
+
+* A new book is added
+* A book's description is updated
+* An author name is corrected
+* A book is deleted
+
+How does OpenSearch stay synchronized with the source database?
+
+
+### Two Approaches to Data Synchronization
+
+There is no single correct solution. Different projects use different strategies depending on their scale and requirements.
+
+#### Option A — Manual / Batch Synchronization
+
+##### Concept
+
+Create a script that:
+
+1. Reads book data from PostgreSQL
+2. Transforms it into OpenSearch documents
+3. Pushes the documents into OpenSearch
+
+The script can be executed whenever book data changes.
+
+##### Workflow
+
+```
+PostgreSQL
+     ↓
+Sync Script
+     ↓
+OpenSearch
+```
+
+##### Example
+
+```
+python sync_books.py
+```
+
+The script:
+
+* Fetches all books from PostgreSQL
+* Rebuilds the OpenSearch index
+* Uploads the latest data
+
+##### Advantages
+
+* Simple to implement
+* Easy to debug
+* No additional infrastructure required
+* Ideal for small projects and early development
+
+##### Disadvantages
+
+* OpenSearch is not updated immediately
+* Requires manual execution or scheduled jobs
+* Not suitable for large-scale production systems
+
+##### Recommended Usage
+
+For Biblo's initial development phase, batch synchronization is the simplest and most practical solution.
+
+
+#### Option B — Real-Time Synchronization Using Kafka
+
+##### Concept
+
+Whenever data changes in PostgreSQL, the application publishes an event to Kafka.
+
+A separate service listens for these events and updates OpenSearch automatically.
+
+##### Workflow
+
+```
+User Action
+     ↓
+FastAPI
+     ↓
+PostgreSQL
+
+FastAPI
+     ↓
+Kafka Topic
+     ↓
+Kafka Consumer
+     ↓
+OpenSearch
+```
+
+##### Example Event
+
+When a book is created:
+
+```
+{
+  "event": "book_created",
+  "book_id": 123
+}
+```
+
+When a book is updated:
+
+```
+{
+  "event": "book_updated",
+  "book_id": 123
+}
+```
+
+##### Consumer Responsibilities
+
+The Kafka consumer:
+
+1. Receives the event
+2. Fetches the latest book data
+3. Updates the OpenSearch index
+
+##### Advantages
+
+* Near real-time updates
+* Decouples services
+* Scales well
+* Common production architecture
+
+##### Disadvantages
+
+* More complex
+* Requires Kafka infrastructure
+* Additional services to maintain
+
+### Why Kafka and OpenSearch Often Appear Together
+
+Originally, Kafka seemed useful mainly for:
+
+* User activity tracking
+* Analytics
+* Recommendation systems
+
+However, a major real-world use case is data synchronization.
+
+Kafka acts as the communication layer between:
+
+```
+PostgreSQL
+        ↔
+Kafka
+        ↔
+OpenSearch
+```
+
+This ensures that:
+
+* Database updates are captured as events
+* OpenSearch receives updates automatically
+* Search results remain current
+
+### Recommended Roadmap for Biblo
+
+#### Phase 1
+
+Implement OpenSearch search functionality.
+
+Use a simple synchronization script:
+
+```
+PostgreSQL
+     ↓
+Sync Script
+     ↓
+OpenSearch
+```
+
+Goal:
+
+* Learn OpenSearch
+* Implement book search
+* Keep architecture simple
+
+#### Phase 2
+
+Introduce Kafka.
+
+Publish events for:
+
+* Book creation
+* Book updates
+* Book deletion
+
+Create Kafka consumers that update OpenSearch automatically.
+
+```
+FastAPI
+     ↓
+Kafka
+     ↓
+OpenSearch Consumer
+     ↓
+OpenSearch
+```
+
+Goal:
+
+* Learn event-driven architecture
+* Learn Kafka consumers and producers
+* Keep OpenSearch synchronized in real time
+
+### Key Takeaway
+
+OpenSearch should not be considered the source of truth.
+
+The source of truth remains PostgreSQL.
+
+```
+PostgreSQL = Source of Truth
+
+OpenSearch = Search Index
+```
+
+PostgreSQL stores the actual data.
+
+OpenSearch stores a searchable representation of that data.
+
+The synchronization mechanism (manual scripts or Kafka) is responsible for keeping both systems aligned.
