@@ -9,6 +9,7 @@ class Book(Base):
     title = Column(String, index=True, nullable=False)
     author = Column(String, index=True, nullable=False)
     description = Column(String)
+    isbn = Column(String)
 
     # Relationships
     book_genre = relationship("BookGenre", back_populates="book", cascade="all, delete-orphan")

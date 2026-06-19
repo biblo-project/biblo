@@ -1,12 +1,14 @@
 import 'theme.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class BookData {
   final int id;
   final String title;
   final String author;
   final String description;
+  final String isbn;
   bool isLiked;
 
   BookData({
@@ -14,6 +16,7 @@ class BookData {
     required this.title,
     required this.author,
     required this.description,
+    required this.isbn,
     required this.isLiked,
   });
 
@@ -24,6 +27,7 @@ class BookData {
       title: json['title'],
       author: json['author'],
       description: json['description'],
+      isbn: json['isbn'] ?? '', // parse from json with fallback
       isLiked: json['isLiked'] ?? false, // Reads live state from your FastAPI map loop
     );
   }
@@ -41,6 +45,9 @@ class Book extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final String coverUrl = 'https://covers.openlibrary.org/b/isbn/${book.isbn.trim()}-M.jpg';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
       height: MediaQuery.sizeOf(context).height,
@@ -89,13 +96,59 @@ class Book extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                /*
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: const Image(
-                    image: AssetImage('assets/images/book-cover-temporary.jpg'),
+                  // 2. Swapped to Image.network with structured fallbacks
+                  child: Image.network(
+                    coverUrl,
                     fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[800],
+                        child: const Center(
+                          child: Icon(Icons.book, color: Colors.white54, size: 50),
+                        ),
+                      );
+                    },
                   ),
                 ),
+                */
+
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    // 1. Using the ultra-reliable Google Books endpoint
+                    coverUrl,
+                    fit: BoxFit.cover,
+
+                    // 2. Simple loading layout
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    },
+
+                    // 3. Simple error layout if the ISBN doesn't exist
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[800],
+                        child: const Center(
+                          child: Icon(Icons.book, color: Colors.white54, size: 50),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
               ),
             ),
           ),

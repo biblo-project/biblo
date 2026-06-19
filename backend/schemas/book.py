@@ -5,6 +5,7 @@ class BookOut(BaseModel):
     title: str
     author: str
     description: str
+    isbn: str
 
     class Config:
         from_attributes = True
