@@ -81,6 +81,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
     super.dispose();
   }
 
+  bool get _isFormValid {
+    return _titleController.text.trim().isNotEmpty &&
+        _authorController.text.trim().isNotEmpty &&
+        _isbnController.text.trim().isNotEmpty &&
+        _descController.text.trim().isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +101,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
+          autovalidateMode: AutovalidateMode.always,
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
@@ -109,37 +117,48 @@ class _AddBookScreenState extends State<AddBookScreen> {
                 // Title Input
                 TextFormField(
                   controller: _titleController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(labelText: 'Book Title *', border: OutlineInputBorder()),
                   validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title' : null,
+                    onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 16),
 
                 // Author Input
                 TextFormField(
                   controller: _authorController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   decoration: const InputDecoration(labelText: 'Author *', border: OutlineInputBorder()),
                   validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an author' : null,
+                    onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 16),
 
                 // ISBN Input
                 TextFormField(
                   controller: _isbnController,
-                  decoration: const InputDecoration(labelText: 'ISBN Code', border: OutlineInputBorder()),
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  decoration: const InputDecoration(labelText: 'ISBN Code *', border: OutlineInputBorder()),
+                  validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an ISBN code' : null, // Added validator
+                    onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 16),
 
                 // Description Input
                 TextFormField(
                   controller: _descController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: 'Description *', border: OutlineInputBorder()),
+                  validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a description' : null, // Added validator
+                    onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 24),
 
                 // Submit Button
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _addBookToDatabase,
+                  // Disables the button by passing null if loading OR if any of the 4 fields are empty
+                  onPressed: (_isLoading || !_isFormValid) ? null : _addBookToDatabase,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -151,14 +170,15 @@ class _AddBookScreenState extends State<AddBookScreen> {
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                   )
                       : const Text(
-                      'Save to Database',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold
-                      )
+                    'Save to Database',
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold
+                    ),
                   ),
                 ),
+
               ],
             ),
           ),
