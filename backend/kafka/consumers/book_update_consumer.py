@@ -53,6 +53,7 @@ try:
             action = event.get("action")
             book_id = event.get("book_id")
 
+            '''
             # Scenario A: Write operations
             if action in ("create", "update"):
                 client.index(
@@ -66,6 +67,23 @@ try:
                     }
                 )
                 print(f"Synced book_id {book_id} cleanly to OpenSearch.")
+                '''
+
+            # Scenario A: Write operations
+            if action in ("create", "update"):
+                # Capture the response returned by OpenSearch
+                response = client.index(
+                    index="biblo_books",
+                    id=str(book_id),
+                    body={
+                        "title": event.get("title"),
+                        "author": event.get("author"),
+                        "description": event.get("description"),
+                        "isbn": event.get("isbn"),
+                    }
+                )
+                print(f"Synced book_id {book_id} cleanly to OpenSearch.")
+                print(f"RAW OPENSEARCH RESPONSE: {json.dumps(response, indent=2)}")
 
             # Scenario B: Eviction operations
             elif action == "delete":
