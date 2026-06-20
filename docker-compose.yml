@@ -1,4 +1,7 @@
 services:
+  # =================================================================
+  # OPENSEARCH CLUSTER
+  # =================================================================
   biblo-opensearch-node1:
     image: opensearchproject/opensearch:latest
     container_name: biblo-opensearch-node1
@@ -39,23 +42,98 @@ services:
     networks:
       - biblo-opensearch-network
 
-  # === ADDED OPENSEARCH DASHBOARDS FRONTEND ===
+  # =================================================================
+  # OPENSEARCH DASHBOARDS FRONTEND
+  # =================================================================
   biblo-dashboards:
     image: opensearchproject/opensearch-dashboards:latest
     container_name: biblo-dashboards
     ports:
-      - 5601:5601 # Exposes the web interface to your browser at http://localhost:5601
+      - "${DASHBOARDS_PORT}:5601"
     environment:
-      # Points Dashboards to Node 1 inside the Docker network using HTTPS
       - OPENSEARCH_HOSTS=["https://biblo-opensearch-node1:9200"]
-      # Credentials used by Dashboards to talk to the cluster
       - OPENSEARCH_USERNAME=admin
       - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD}
     networks:
       - biblo-opensearch-network
     depends_on:
-      - biblo-opensearch-node1 # Ensures Node 1 boots up before Dashboards tries to connect
+      - biblo-opensearch-node1
 
+  # =================================================================
+  # KAFKA 3-NODE KRaft CLUSTER (Fixed Placement under Services)
+  # =================================================================
+  biblo-kafka1:
+    image: apache/kafka:latest
+    container_name: biblo-kafka1
+    ports:
+      - "${KAFKA1_PORT}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      # Listen on 9092 for localhost traffic, and 19092 for internal docker container traffic
+      KAFKA_LISTENERS: 'CLIENT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:19092'
+      KAFKA_ADVERTISED_LISTENERS: 'CLIENT://localhost:9092,EXTERNAL://biblo-kafka1:19092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'EXTERNAL'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@biblo-kafka1:9093,2@biblo-kafka2:9093,3@biblo-kafka3:9093'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+    networks:
+      - biblo-opensearch-network
+
+  biblo-kafka2:
+    image: apache/kafka:latest
+    container_name: biblo-kafka2
+    ports:
+      - "${KAFKA2_PORT}:9094" # Remapped port assignment host collision protections
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENERS: 'CLIENT://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:19092'
+      KAFKA_ADVERTISED_LISTENERS: 'CLIENT://localhost:9094,EXTERNAL://biblo-kafka2:19092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'EXTERNAL'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@biblo-kafka1:9093,2@biblo-kafka2:9093,3@biblo-kafka3:9093'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+    networks:
+      - biblo-opensearch-network
+
+  biblo-kafka3:
+    image: apache/kafka:latest
+    container_name: biblo-kafka3
+    ports:
+      - "${KAFKA3_PORT}:9095"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENERS: 'CLIENT://0.0.0.0:9095,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:19092'
+      KAFKA_ADVERTISED_LISTENERS: 'CLIENT://localhost:9095,EXTERNAL://biblo-kafka3:19092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'EXTERNAL'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@biblo-kafka1:9093,2@biblo-kafka2:9093,3@biblo-kafka3:9093'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+    networks:
+      - biblo-opensearch-network
+
+  biblo-kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: biblo-kafka-ui
+    ports:
+      - "${KAFKA_UI_PORT}:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: biblo-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: biblo-kafka1:19092,biblo-kafka2:19092,biblo-kafka3:19092
+    networks:
+      - biblo-opensearch-network
+
+# =================================================================
+# GLOBAL INDEPENDENT NETWORK SETUP
+# =================================================================
 networks:
   biblo-opensearch-network:
     driver: bridge
