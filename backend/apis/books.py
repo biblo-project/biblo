@@ -197,6 +197,60 @@ def admin_search_books(q: str = "", db: Session = Depends(get_db)):
             .limit(20)
             .all()
         )
+    
+# _____________________________________________________________________________________________________
+# DELETE BOOKS
+    
+@router.delete("/admin/{book_id}", status_code=status.HTTP_200_OK)
+def delete_book(book_id: int, db: Session = Depends(get_db)):
+    """
+    Deletes a book record from PostgreSQL and removes it 
+    from the OpenSearch search index instantly.
+    """
+    # 1. Locate the book record in PostgreSQL
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Book with id {book_id} does not exist in the database."
+        )
+
+    try:
+        # 2. Extract the title before purging for logging/success details
+        book_title = book.title
+
+        # 3. Delete the record from your transactional PostgreSQL database
+        db.delete(book)
+        db.commit()
+
+        # 4. Immediately remove it from OpenSearch to prevent "ghost" results
+        try:
+            from backend.core.opensearch import get_opensearch_client
+            client = get_opensearch_client()
+            
+            client.delete(
+                index="books",
+                id=str(book_id),
+                refresh=True # Forces OpenSearch to apply the deletion immediately
+            )
+        except Exception as os_delete_error:
+            # Wrap in a sub-try/catch so that if OpenSearch fails, 
+            # the primary database deletion doesn't get messed up.
+            import logging
+            logger = logging.getLogger("uvicorn.error")
+            logger.error(f"Postgres deleted book {book_id}, but OpenSearch removal failed: {os_delete_error}")
+
+        return {"message": f"Successfully deleted '{book_title}' from the catalog."}
+
+    except Exception as e:
+        db.rollback() # Safe rollback on structural database faults
+        import logging
+        logger = logging.getLogger("uvicorn.error")
+        logger.error(f"Database deletion crash inside DELETE /books/admin/{book_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database deletion operation failed."
+        )
 
 #_____________________________________________________________________________________________________
 # USER ROUTES

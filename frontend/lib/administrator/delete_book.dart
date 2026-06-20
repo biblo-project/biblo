@@ -11,179 +11,265 @@ class DeleteBookScreen extends StatefulWidget {
 }
 
 class _DeleteBookScreenState extends State<DeleteBookScreen> {
-  final _formKey = GlobalKey<FormState>();
+  // Search State
+  final TextEditingController _searchController = TextEditingController();
+  List<dynamic> _searchResults = [];
+  bool _isSearching = false;
 
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _authorController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
-  final TextEditingController _isbnController = TextEditingController();
+  // Selected Book State
+  Map<String, dynamic>? _selectedBook;
+  bool _isDeleting = false;
 
-  bool _isLoading = false;
-
-  Future<void> _addBookToDatabase() async {
-    if (!_formKey.currentState!.validate()) return;
+  // 1. Search Network Call
+  Future<void> _searchBooks(String query) async {
+    if (query.trim().isEmpty) return;
 
     setState(() {
-      _isLoading = true;
+      _isSearching = true;
+      _selectedBook = null; // Clear previous selection if searching again
     });
 
-    final url = Uri.parse('http://10.0.2.2:8000/books');
+    final url = Uri.parse('http://10.0.2.2:8000/books/admin/search?q=${Uri.encodeComponent(query.trim())}');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'title': _titleController.text.trim(),
-          'author': _authorController.text.trim(),
-          'description': _descController.text.trim(),
-          'isbn': _isbnController.text.trim(),
-        }),
-      );
-
-      if (!mounted) return;
-
-      // 1. Turn off loading spinner here
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Book successfully added to database!')),
-        );
-        _formKey.currentState!.reset();
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() {
+          _searchResults = jsonDecode(response.body);
+        });
       } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['detail'] ?? 'Failed to create record.');
+        throw Exception('Failed to load search results');
       }
     } catch (e) {
+      _showSnackBar('Error searching books: $e', Colors.redAccent);
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  // 2. Select Book Target Layout
+  void _selectBook(Map<String, dynamic> book) {
+    setState(() {
+      _selectedBook = book;
+    });
+  }
+
+  // 3. DELETE Network Call to Purge Book
+  Future<void> _deleteBookFromDatabase() async {
+    if (_selectedBook == null) return;
+
+    setState(() => _isDeleting = true);
+
+    final bookId = _selectedBook!['id'];
+    final url = Uri.parse('http://10.0.2.2:8000/books/admin/$bookId');
+
+    try {
+      final response = await http.delete(url);
+
       if (!mounted) return;
 
-      // 2. Turn off loading spinner here too
-      setState(() {
-        _isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding book: $e'), backgroundColor: Colors.redAccent),
-      );
+      if (response.statusCode == 200) {
+        _showSnackBar('Book successfully purged from system!', Colors.orangeAccent);
+        setState(() {
+          _selectedBook = null;
+          _searchResults.clear();
+          _searchController.clear();
+        });
+      } else {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['detail'] ?? 'Failed to delete record.');
+      }
+    } catch (e) {
+      _showSnackBar('Deletion failed: $e', Colors.redAccent);
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
     }
-    // 3. Delete the entire finally block from here
+  }
+
+  // 4. Modal Warning Dialogue Flow
+  void _showDeleteConfirmationDialog(String title) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Permanent Deletion'),
+        content: Text('Are you completely sure you want to permanently delete "$title"? This change is destructive and cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () {
+              Navigator.pop(context); // Dismiss alert dialog box
+              _deleteBookFromDatabase(); // Invoke actual backend API delete
+            },
+            child: const Text('Delete Permanently', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSnackBar(String message, Color bgColor) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: bgColor),
+    );
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _authorController.dispose();
-    _descController.dispose();
-    _isbnController.dispose();
+    _searchController.dispose();
     super.dispose();
-  }
-
-  bool get _isFormValid {
-    return _titleController.text.trim().isNotEmpty &&
-        _authorController.text.trim().isNotEmpty &&
-        _isbnController.text.trim().isNotEmpty &&
-        _descController.text.trim().isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Admin Dashboard: Add Book',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Admin Dashboard: Delete Book', style: TextStyle(color: Colors.white)),
         backgroundColor: primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          autovalidateMode: AutovalidateMode.always,
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Search Input Block Component
+            Row(
               children: [
-                const Text(
-                  'Catalog New Book Entry',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      hintText: 'Search book by title or author to delete...',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (value) => _searchBooks(value),
+                  ),
                 ),
-                const SizedBox(height: 20),
-
-                // Title Input
-                TextFormField(
-                    controller: _titleController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    decoration: const InputDecoration(labelText: 'Book Title *', border: OutlineInputBorder()),
-                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title' : null,
-                    onChanged: (value) => setState(() {})
-                ),
-                const SizedBox(height: 16),
-
-                // Author Input
-                TextFormField(
-                    controller: _authorController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    decoration: const InputDecoration(labelText: 'Author *', border: OutlineInputBorder()),
-                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an author' : null,
-                    onChanged: (value) => setState(() {})
-                ),
-                const SizedBox(height: 16),
-
-                // ISBN Input
-                TextFormField(
-                    controller: _isbnController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    decoration: const InputDecoration(labelText: 'ISBN Code *', border: OutlineInputBorder()),
-                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an ISBN code' : null, // Added validator
-                    onChanged: (value) => setState(() {})
-                ),
-                const SizedBox(height: 16),
-
-                // Description Input
-                TextFormField(
-                    controller: _descController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Description *', border: OutlineInputBorder()),
-                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a description' : null, // Added validator
-                    onChanged: (value) => setState(() {})
-                ),
-                const SizedBox(height: 24),
-
-                // Submit Button
+                const SizedBox(width: 10),
                 ElevatedButton(
-                  // Disables the button by passing null if loading OR if any of the 4 fields are empty
-                  onPressed: (_isLoading || !_isFormValid) ? null : _addBookToDatabase,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
-                      : const Text(
-                    'Save to Database',
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold
-                    ),
-                  ),
+                  onPressed: () => _searchBooks(_searchController.text),
+                  child: const Text('Search', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
-
               ],
             ),
+            const SizedBox(height: 20),
+
+            // DYNAMIC LAYOUT AREA
+            Expanded(
+              child: _isSearching
+                  ? const Center(child: CircularProgressIndicator())
+                  : _selectedBook != null
+                  ? _buildReviewDetailsForm() // Displays structured read-only identity overview
+                  : _buildSearchResultsList(), // Shows search results pool selection list
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // WIDGET: Renders Search Query Results Pool
+  Widget _buildSearchResultsList() {
+    if (_searchResults.isEmpty && _searchController.text.isNotEmpty && !_isSearching) {
+      return const Center(child: Text('No books found matching criteria.'));
+    }
+    return ListView.builder(
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final book = _searchResults[index];
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          child: ListTile(
+            title: Text(book['title'] ?? 'Unknown Title', style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('by ${book['author'] ?? 'Unknown Author'}'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: () => _selectBook(book),
+          ),
+        );
+      },
+    );
+  }
+
+  // WIDGET: Complete Read-Only Book Detail Sheet Overview Layout
+  Widget _buildReviewDetailsForm() {
+    // Extract values dynamically right out of state map
+    final title = _selectedBook?['title'] ?? 'Unknown Title';
+    final author = _selectedBook?['author'] ?? 'Unknown Author';
+    final isbn = _selectedBook?['isbn'] ?? '';
+    final description = _selectedBook?['description'] ?? '';
+
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Review Target Catalog Details',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const Divider(height: 30),
+
+              // Presenting clean read-only informational blocks
+              _buildStaticDetailRow('Title', title),
+              const SizedBox(height: 16),
+
+              _buildStaticDetailRow('Author', author),
+              const SizedBox(height: 16),
+
+              _buildStaticDetailRow('ISBN Code', isbn.isEmpty ? 'None set' : isbn),
+              const SizedBox(height: 16),
+
+              _buildStaticDetailRow('Description', description.isEmpty ? 'No description provided' : description),
+              const SizedBox(height: 30),
+
+              // Action execution button setup safely wrapped with verification trigger logic
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade700, // Explicit warning coloration context
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: _isDeleting ? null : () => _showDeleteConfirmationDialog(title),
+                child: _isDeleting
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                )
+                    : const Text('Delete Book From Catalog', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  // REUSABLE READ-ONLY TEXT FIELD WRAPPER COMPONENT
+  Widget _buildStaticDetailRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey, fontSize: 13)),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400, height: 1.3),
+        ),
+        const Divider(color: Colors.black12, height: 24),
+      ],
     );
   }
 }

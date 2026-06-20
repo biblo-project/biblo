@@ -1656,7 +1656,7 @@ Change it to a clean, absolute import:
 from apis.auth import router as auth_router
 ```
 ---
-## Keeping OpenSearch in Sync with PostgreSQL
+## 28. Keeping OpenSearch in Sync with PostgreSQL
 
 ### The Question
 
@@ -1888,3 +1888,124 @@ PostgreSQL stores the actual data.
 OpenSearch stores a searchable representation of that data.
 
 The synchronization mechanism (manual scripts or Kafka) is responsible for keeping both systems aligned.
+
+-------
+
+
+
+
+
+
+
+
+
+
+
+## 29. Debugging Discovery: PostgreSQL ↔ OpenSearch Desynchronization
+
+### Problem
+
+While testing fuzzy search, searches for newly added books were returning no results from OpenSearch.
+
+Example:
+
+```
+{
+  "query": {
+    "multi_match": {
+      "query": "recursiom",
+      "fields": ["title", "author"],
+      "fuzziness": "AUTO"
+    }
+  }
+}
+```
+
+returned:
+
+```
+{
+  "hits": {
+    "total": {
+      "value": 0
+    },
+    "hits": []
+  }
+}
+```
+
+Initially, this appeared to be a fuzzy-search configuration issue.
+
+### Root Cause
+
+The issue was not related to OpenSearch fuzziness at all.
+
+New books added through the Admin Add Book screen were being saved successfully to PostgreSQL but were **not being indexed into OpenSearch**.
+
+As a result:
+
+* PostgreSQL contained the latest data.
+* OpenSearch had stale data.
+* Newly created books were invisible to search queries.
+* The API silently fell back to the PostgreSQL `ILIKE` search implementation.
+
+### Key Lesson
+
+When using OpenSearch as a dedicated search engine, it becomes a separate data store that must be kept synchronized with the primary PostgreSQL database.
+
+Search failures may be caused by data synchronization issues rather than search query configuration.
+
+### Temporary Solution
+
+Immediately index newly created books into OpenSearch after the PostgreSQL transaction succeeds.
+
+Workflow:
+
+1. Save book to PostgreSQL.
+2. Retrieve generated database ID.
+3. Index the same document into OpenSearch using the PostgreSQL ID.
+4. Use `refresh=True` to make the document searchable immediately.
+
+This provides near-instant consistency for newly added books.
+
+### Long-Term Solution
+
+Implement an event-driven synchronization pipeline using Kafka.
+
+Target architecture:
+
+```
+PostgreSQL
+      │
+      ▼
+   Kafka Topic
+      │
+      ▼
+Kafka Consumer
+      │
+      ▼
+ OpenSearch
+```
+
+Benefits:
+
+* Eliminates manual synchronization.
+* Decouples PostgreSQL from OpenSearch.
+* Provides eventual consistency.
+* Scales to additional consumers (analytics, notifications, recommendation pipelines, etc.).
+* Creates a realistic production-grade architecture.
+
+### Interview Talking Point
+
+This debugging session demonstrated the importance of validating assumptions during troubleshooting.
+
+Initial assumption:
+
+> Fuzzy search is broken.
+
+Actual root cause:
+
+> OpenSearch was missing the document entirely because PostgreSQL and OpenSearch were not synchronized.
+
+The investigation ultimately identified a distributed data consistency problem rather than a search relevance problem, leading to the design of a future Kafka-based synchronization architecture.
+
