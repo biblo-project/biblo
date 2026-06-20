@@ -3,14 +3,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../theme.dart';
 
-class AddBookScreen extends StatefulWidget {
-  const AddBookScreen({super.key});
+class DeleteBookScreen extends StatefulWidget {
+  const DeleteBookScreen({super.key});
 
   @override
-  State<AddBookScreen> createState() => _AddBookScreenState();
+  State<DeleteBookScreen> createState() => _DeleteBookScreenState();
 }
 
-class _AddBookScreenState extends State<AddBookScreen> {
+class _DeleteBookScreenState extends State<DeleteBookScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _titleController = TextEditingController();
@@ -27,7 +27,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('http://10.0.2.2:8000/books/admin');
+    final url = Uri.parse('http://10.0.2.2:8000/books');
 
     try {
       final response = await http.post(
@@ -116,41 +116,41 @@ class _AddBookScreenState extends State<AddBookScreen> {
 
                 // Title Input
                 TextFormField(
-                  controller: _titleController,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  decoration: const InputDecoration(labelText: 'Book Title *', border: OutlineInputBorder()),
-                  validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title' : null,
+                    controller: _titleController,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    decoration: const InputDecoration(labelText: 'Book Title *', border: OutlineInputBorder()),
+                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a title' : null,
                     onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 16),
 
                 // Author Input
                 TextFormField(
-                  controller: _authorController,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  decoration: const InputDecoration(labelText: 'Author *', border: OutlineInputBorder()),
-                  validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an author' : null,
+                    controller: _authorController,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    decoration: const InputDecoration(labelText: 'Author *', border: OutlineInputBorder()),
+                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an author' : null,
                     onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 16),
 
                 // ISBN Input
                 TextFormField(
-                  controller: _isbnController,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  decoration: const InputDecoration(labelText: 'ISBN Code *', border: OutlineInputBorder()),
-                  validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an ISBN code' : null, // Added validator
+                    controller: _isbnController,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    decoration: const InputDecoration(labelText: 'ISBN Code *', border: OutlineInputBorder()),
+                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter an ISBN code' : null, // Added validator
                     onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 16),
 
                 // Description Input
                 TextFormField(
-                  controller: _descController,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Description *', border: OutlineInputBorder()),
-                  validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a description' : null, // Added validator
+                    controller: _descController,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    maxLines: 4,
+                    decoration: const InputDecoration(labelText: 'Description *', border: OutlineInputBorder()),
+                    validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a description' : null, // Added validator
                     onChanged: (value) => setState(() {})
                 ),
                 const SizedBox(height: 24),

@@ -21,12 +21,186 @@ from sklearn.neighbors import NearestNeighbors
 from backend.models.user_genre import UserGenre
 from backend.models.book_genre import BookGenre
 
-from backend.schemas.book import BookCreate, BookOut
+from backend.schemas.book import BookCreate, BookOut, BookUpdate
 from backend.models.book import Book # Your SQLAlchemy Model
 from backend.database import get_db   # Your DB Session Yield hook
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
+#_____________________________________________________________________________________________________
+# ADMINISTRATOR ROUTES
+#_____________________________________________________________________________________________________
+#_____________________________________________________________________________________________________
+# ADD BOOKS   
+
+@router.post("/admin", response_model=BookOut, status_code=status.HTTP_201_CREATED)
+def create_book(book_in: BookCreate, db: Session = Depends(get_db)) -> Any:
+    """
+    Creates a new book entry in the PostgreSQL database.
+    This action will serve as our future upstream event source for Kafka syncing.
+    """
+    # 1. Optional business logic check: Prevent duplicate ISBNs if provided
+    if book_in.isbn and book_in.isbn.strip():
+        existing_book = db.query(Book).filter(Book.isbn == book_in.isbn.strip()).first()
+        if existing_book:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A book record with this ISBN code already exists."
+            )
+
+    try:
+        # 2. Map the validated incoming Pydantic payload to your SQLAlchemy model instance
+        new_book = Book(
+            title=book_in.title.strip(),
+            author=book_in.author.strip(),
+            description=book_in.description.strip() if book_in.description else None,
+            isbn=book_in.isbn.strip() if book_in.isbn else None
+        )
+
+        # 3. Commit the entity to your transactional PostgreSQL database
+        db.add(new_book)
+        db.commit()
+        db.refresh(new_book) # Hydrates the instance with its new generated database 'id'
+
+        # 4. Return the database record (FastAPI automatically transforms this to your BookOut schema shape)
+        return new_book
+
+    except Exception as e:
+        db.rollback() # Safely roll back transaction context on fault
+        import logging
+        logger = logging.getLogger("uvicorn.error")
+        logger.error(f"Database write crash inside POST /books: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database write operation failed."
+        )
+
+#_____________________________________________________________________________________________________
+# UPDATE BOOKS
+
+@router.put("/admin/{book_id}", response_model=BookOut)
+def update_book(book_id: int, book_in: BookUpdate, db: Session = Depends(get_db)) -> Any:
+    """
+    Updates an existing book record in PostgreSQL.
+    This will serve as our future Kafka event source for 'UPDATE' mutations.
+    """
+    # 1. Locate the targeted record in the database
+    book = db.query(Book).filter(Book.id == book_id).first()
+    if not book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Book with id {book_id} does not exist."
+        )
+
+    # 2. Safety Check: Prevent duplicate ISBNs across different books
+    if book_in.isbn and book_in.isbn.strip():
+        clean_isbn = book_in.isbn.strip()
+        # Find if *another* book is already using this updated ISBN code
+        existing_isbn = db.query(Book).filter(Book.isbn == clean_isbn, Book.id != book_id).first()
+        if existing_isbn:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Another book record is already using this ISBN code."
+            )
+
+    try:
+        # 3. Extract the incoming data payload, ignoring fields that weren't sent
+        update_data = book_in.model_dump(exclude_unset=True)
+        
+        # 4. Dynamically loop through and apply the updates to the database model instance
+        for key, value in update_data.items():
+            if isinstance(value, str):
+                setattr(book, key, value.strip())
+            else:
+                setattr(book, key, value)
+
+        # 5. Commit change context to your transactional PostgreSQL database
+        db.commit()
+        db.refresh(book)
+        
+        return book
+
+    except Exception as e:
+        db.rollback()
+        import logging
+        logger = logging.getLogger("uvicorn.error")
+        logger.error(f"Database update crash inside PUT /books/{book_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database update operation failed."
+        )
+    
+# _____________________________________________________________________________________________________
+# SEARCH BOOKS
+
+from backend.core.opensearch import get_opensearch_client
+
+@router.get("/admin/search", response_model=List[BookOut])
+def admin_search_books(q: str = "", db: Session = Depends(get_db)):
+    """
+    Searches books using OpenSearch multi_match with fuzziness enabled.
+    Falls back to a clean list if no matches or cluster errors occur.
+    """
+    if not q.strip():
+        return []
+
+    # 1. Define the OpenSearch Fuzzy Query Payload
+    search_body = {
+        "size": 20,
+        "query": {
+            "multi_match": {
+                "query": q.strip(),
+                "fields": ["title", "author"],
+                "fuzziness": "AUTO",  # Automatically allows 1-2 character typos based on string length
+                "prefix_length": 1,  # Prevents fuzziness on the very first character for better speed
+            }
+        },
+    }
+
+    try:
+        # 2. Query your OpenSearch 'books' index safely using an instantiated client
+        client = get_opensearch_client()  # Added parentheses to fix the bug
+        response = client.search(body=search_body, index="biblo_books")
+
+        # 3. Extract the document IDs from the OpenSearch search hits
+        hits = response["hits"]["hits"]
+        book_ids = [int(hit["_id"]) for hit in hits]
+
+        if not book_ids:
+            return []
+
+        # 4. Fetch the rich, complete records from PostgreSQL using the retrieved IDs
+        books = db.query(Book).filter(Book.id.in_(book_ids)).all()
+
+        # Sort PostgreSQL results to match OpenSearch's precise score sequence
+        book_map = {book.id: book for book in books}
+        ordered_books = [book_map[b_id] for b_id in book_ids if b_id in book_map]
+
+        return ordered_books
+
+    except Exception as opensearch_error:
+        # Fallback Strategy
+        import logging
+
+        logger = logging.getLogger("uvicorn.error")
+        logger.warning(
+            f"OpenSearch failed ({opensearch_error}). Falling back to database ILIKE."
+        )
+
+        search_term = f"%{q.strip()}%"
+        return (
+            db.query(Book)
+            .filter(
+                (Book.title.ilike(search_term))
+                | (Book.author.ilike(search_term))
+            )
+            .limit(20)
+            .all()
+        )
+
+#_____________________________________________________________________________________________________
+# USER ROUTES
+#_____________________________________________________________________________________________________
 #_____________________________________________________________________________________________________
 # GET RANDOM RECS
 
@@ -216,47 +390,3 @@ def toggle_like_book(
             "message": f"Successfully added '{book.title}' to your reading list as to_read."
         }
 
-#_____________________________________________________________________________________________________
-# ADD BOOKS TO DB    
-
-@router.post("", response_model=BookOut, status_code=status.HTTP_201_CREATED)
-def create_book(book_in: BookCreate, db: Session = Depends(get_db)) -> Any:
-    """
-    Creates a new book entry in the PostgreSQL database.
-    This action will serve as our future upstream event source for Kafka syncing.
-    """
-    # 1. Optional business logic check: Prevent duplicate ISBNs if provided
-    if book_in.isbn and book_in.isbn.strip():
-        existing_book = db.query(Book).filter(Book.isbn == book_in.isbn.strip()).first()
-        if existing_book:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A book record with this ISBN code already exists."
-            )
-
-    try:
-        # 2. Map the validated incoming Pydantic payload to your SQLAlchemy model instance
-        new_book = Book(
-            title=book_in.title.strip(),
-            author=book_in.author.strip(),
-            description=book_in.description.strip() if book_in.description else None,
-            isbn=book_in.isbn.strip() if book_in.isbn else None
-        )
-
-        # 3. Commit the entity to your transactional PostgreSQL database
-        db.add(new_book)
-        db.commit()
-        db.refresh(new_book) # Hydrates the instance with its new generated database 'id'
-
-        # 4. Return the database record (FastAPI automatically transforms this to your BookOut schema shape)
-        return new_book
-
-    except Exception as e:
-        db.rollback() # Safely roll back transaction context on fault
-        import logging
-        logger = logging.getLogger("uvicorn.error")
-        logger.error(f"Database write crash inside POST /books: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database write operation failed."
-        )

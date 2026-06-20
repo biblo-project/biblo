@@ -30,3 +30,9 @@ class BookCreate(BaseModel):
     author: str
     description: Optional[str] = None
     isbn: Optional[str] = None
+
+class BookUpdate(BaseModel):
+    title: Optional[str] = None
+    author: Optional[str] = None
+    description: Optional[str] = None
+    isbn: Optional[str] = None
