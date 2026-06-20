@@ -360,3 +360,4 @@ Here is the step-by-step breakdown of how your machine learning recommendation e
 * **Returning Database Objects:** The algorithm returns a list of numerical index coordinates. The code takes those layout positions, grabs the original PostgreSQL SQLAlchemy `Book` objects out of the DataFrame, and drops them into a clean array.
 
 FastAPI automatically serializes these 5 database objects into JSON and sends them right down to your Flutter application's vertical layout!
+

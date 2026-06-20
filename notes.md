@@ -2009,3 +2009,112 @@ Actual root cause:
 
 The investigation ultimately identified a distributed data consistency problem rather than a search relevance problem, leading to the design of a future Kafka-based synchronization architecture.
 
+## 30. Kafka Cluster Networking Notes
+
+### Problem Encountered
+
+While connected inside the Kafka container:
+
+```bash
+docker exec -it biblo-kafka1 bash
+```
+
+running:
+
+```bash
+/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+```
+
+produced warnings similar to:
+
+```text
+WARN Connection to node 2 (localhost/127.0.0.1:9094) could not be established.
+WARN Connection to node 3 (localhost/127.0.0.1:9095) could not be established.
+```
+
+### Root Cause
+
+This is a common Docker networking issue when working with multi-node Kafka clusters.
+
+The command was executed **inside the Kafka container**, where:
+
+```text
+localhost = the current container only
+```
+
+Inside `biblo-kafka1`, the hostname `localhost` refers only to that specific container and has no visibility into the Windows host's port mappings.
+
+As a result:
+
+```text
+biblo-kafka1
+ ├── localhost:9092  ✓ reachable
+ ├── localhost:9094  ✗ not reachable
+ └── localhost:9095  ✗ not reachable
+```
+
+The ports `9094` and `9095` only exist on the Windows host machine and are not valid routes from within the Docker network.
+
+### Correct Solution
+
+When communicating between containers, use Docker's internal DNS names and internal listener ports.
+
+Example:
+
+```bash
+/opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server \
+  biblo-kafka1:19092,biblo-kafka2:19092,biblo-kafka3:19092 \
+  --list
+```
+
+For convenience:
+
+```bash
+export BS=biblo-kafka1:19092,biblo-kafka2:19092,biblo-kafka3:19092
+```
+
+Then:
+
+```bash
+/opt/kafka/bin/kafka-topics.sh --bootstrap-server $BS --list
+```
+
+### Why This Works
+
+Docker automatically provides internal DNS resolution for containers connected to the same network.
+
+Therefore:
+
+```text
+biblo-kafka1:19092
+biblo-kafka2:19092
+biblo-kafka3:19092
+```
+
+allow direct broker-to-broker communication without relying on host machine port mappings.
+
+### Key Lesson
+
+When running distributed systems inside Docker:
+
+* Use `localhost` only when connecting from the host machine.
+* Use container names when connecting between containers.
+* Prefer Docker network DNS (`container-name:port`) for Kafka administrative operations executed inside containers.
+
+### Rule of Thumb
+
+```text
+Host Machine
+    ↓
+localhost:9092
+
+Docker Container
+    ↓
+biblo-kafka1:19092
+biblo-kafka2:19092
+biblo-kafka3:19092
+```
+
+Understanding the distinction between host networking and container networking is critical when debugging Kafka, OpenSearch, PostgreSQL, and other distributed systems running inside Docker.
+
