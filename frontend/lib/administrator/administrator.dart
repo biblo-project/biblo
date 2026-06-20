@@ -24,14 +24,13 @@ class AdministratorScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // START BUTTON
-                  const BasicButton(route: '/add_book', title: 'ADD BOOK'),
+                  const BasicButton(route: '/add_book', title: 'ADD'),
 
-                  // LOGIN BUTTON
                   const BasicButton(route: '/delete_book', title: 'DELETE'),
 
-                  // SIGNUP BUTTON
                   const BasicButton(route: '/update_book', title: 'UPDATE'),
+
+                  const BasicButton(route: '/read_book', title: 'READ'),
                 ]
             )
         )

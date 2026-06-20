@@ -25,6 +25,8 @@ from backend.schemas.book import BookCreate, BookOut, BookUpdate
 from backend.models.book import Book # Your SQLAlchemy Model
 from backend.database import get_db   # Your DB Session Yield hook
 
+from backend.kafka.producers.book_update_producer import publish_book_event
+
 router = APIRouter(prefix="/books", tags=["Books"])
 
 #_____________________________________________________________________________________________________
@@ -61,6 +63,17 @@ def create_book(book_in: BookCreate, db: Session = Depends(get_db)) -> Any:
         db.add(new_book)
         db.commit()
         db.refresh(new_book) # Hydrates the instance with its new generated database 'id'
+
+        # kafka producer function called
+        # publish_book_event("create", new_book)
+
+        try:
+            publish_book_event(action="create", book=new_book)
+            
+        except Exception as e:
+            print(f"Failed to publish to Kafka: {e}")
+            # We don't crash the request because the DB save succeeded, 
+            # but logging it tells us if Kafka is acting up.
 
         # 4. Return the database record (FastAPI automatically transforms this to your BookOut schema shape)
         return new_book
@@ -117,6 +130,17 @@ def update_book(book_id: int, book_in: BookUpdate, db: Session = Depends(get_db)
         # 5. Commit change context to your transactional PostgreSQL database
         db.commit()
         db.refresh(book)
+
+        # kafka producer function called
+        # publish_book_event("update", new_book)
+
+        try:
+            publish_book_event(action="update", book=book)
+            
+        except Exception as e:
+            print(f"Failed to publish to Kafka: {e}")
+            # We don't crash the request because the DB save succeeded, 
+            # but logging it tells us if Kafka is acting up.
         
         return book
 
@@ -223,22 +247,16 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
         db.delete(book)
         db.commit()
 
-        # 4. Immediately remove it from OpenSearch to prevent "ghost" results
+        # kafka producer function called
+        # publish_book_event("delete", new_book)
+
         try:
-            from backend.core.opensearch import get_opensearch_client
-            client = get_opensearch_client()
+            publish_book_event(action="delete", book_id=book_id)
             
-            client.delete(
-                index="books",
-                id=str(book_id),
-                refresh=True # Forces OpenSearch to apply the deletion immediately
-            )
-        except Exception as os_delete_error:
-            # Wrap in a sub-try/catch so that if OpenSearch fails, 
-            # the primary database deletion doesn't get messed up.
-            import logging
-            logger = logging.getLogger("uvicorn.error")
-            logger.error(f"Postgres deleted book {book_id}, but OpenSearch removal failed: {os_delete_error}")
+        except Exception as e:
+            print(f"Failed to publish to Kafka: {e}")
+            # We don't crash the request because the DB save succeeded, 
+            # but logging it tells us if Kafka is acting up.
 
         return {"message": f"Successfully deleted '{book_title}' from the catalog."}
 

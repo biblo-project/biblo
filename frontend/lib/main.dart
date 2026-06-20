@@ -18,6 +18,7 @@ import 'administrator/administrator.dart';
 import 'package:biblo/administrator/add_book.dart';
 import 'package:biblo/administrator/update_book.dart';
 import 'package:biblo/administrator/delete_book.dart';
+import 'package:biblo/administrator/read_book.dart';
 
 void main() {
   runApp(const Biblo());
@@ -49,6 +50,7 @@ class Biblo extends StatelessWidget {
           '/add_book': (context) => const AddBookScreen(),
           '/update_book': (context) => const UpdateBookScreen(),
           '/delete_book': (context) => const DeleteBookScreen(),
+          '/read_book': (context) => const ReadBookScreen(),
           /*
           1. You added 'const' to the screen constructors inside routes (e.g. StartScreen())
           2. If your screen constructors support const, it's a good habit to add it
