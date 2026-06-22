@@ -20,6 +20,9 @@ import 'package:biblo/administrator/update_book.dart';
 import 'package:biblo/administrator/delete_book.dart';
 import 'package:biblo/administrator/read_book.dart';
 
+// Declare this globally so any service can reference it
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() {
   runApp(const Biblo());
 }
@@ -64,6 +67,7 @@ class Biblo extends StatelessWidget {
       1. You cannot have both 'home:' and 'routes:' since home and a named route for / can conflict.
       2. The standard fix is to use 'initialRoute:' instead of 'home:' when you're using named routes.
       */
+      navigatorKey: navigatorKey
     );
   }
 }

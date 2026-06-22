@@ -1,9 +1,36 @@
 import 'theme.dart';
 import 'package:flutter/material.dart';
 import 'basic_button.dart';
+import 'package:biblo/services/post_login_notification_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // Instantiate the notification service instance
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the real-time pipeline once the UI layout finishes mounting
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Passing a mock user ID 42 for testing your Kafka group
+      _notificationService.initialize(42);
+    });
+  }
+
+  @override
+  void dispose() {
+    // Always close down the active connection when navigating away/logging out
+    _notificationService.disconnect();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
