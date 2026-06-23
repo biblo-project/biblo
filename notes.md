@@ -2118,3 +2118,288 @@ biblo-kafka3:19092
 
 Understanding the distinction between host networking and container networking is critical when debugging Kafka, OpenSearch, PostgreSQL, and other distributed systems running inside Docker.
 
+## 31. WebSockets for Real-Time Notifications
+
+### The Problem
+
+Biblo consists of three separate systems that run independently:
+
+1. **Flutter App** (Frontend)
+2. **FastAPI Server** (Backend API)
+3. **Kafka Consumer** (Background worker)
+
+These systems cannot directly communicate with each other without a messaging mechanism.
+
+---
+
+### Why Normal HTTP Isn't Enough
+
+Traditional HTTP communication works like this:
+
+```text
+Client ---> Request ---> Server
+Client <--- Response --- Server
+
+Connection closes
+```
+
+The server can only respond when the client sends a request.
+
+This means the backend cannot suddenly tell a user's phone:
+
+> "A new recommendation is available!"
+
+The mobile app would need to continuously poll the server, which is inefficient.
+
+---
+
+### Why WebSockets?
+
+A WebSocket creates a persistent connection between the Flutter app and the FastAPI server.
+
+Instead of:
+
+```text
+Request -> Response -> Disconnect
+```
+
+we get:
+
+```text
+Connect -> Stay Connected
+```
+
+This allows the server to push information to the client whenever it wants.
+
+---
+
+### High-Level Architecture
+
+```text
+Flutter App
+      │
+      ▼
+FastAPI Server
+      │
+      ▼
+Kafka Broker
+      │
+      ▼
+Kafka Consumer
+```
+
+The WebSocket connection acts as a permanent communication channel between the Flutter app and FastAPI.
+
+---
+
+### End-to-End Notification Flow
+
+#### 1. User Logs In
+
+The user successfully logs into the Flutter application.
+
+```text
+Flutter App
+     │
+     ▼
+FastAPI Authentication Endpoint
+```
+
+---
+
+#### 2. Login Event Published to Kafka
+
+FastAPI publishes an event:
+
+```json
+{
+  "event": "user_logged_in",
+  "user_id": 7
+}
+```
+
+to a Kafka topic.
+
+```text
+FastAPI
+    │
+    ▼
+Kafka Broker
+```
+
+---
+
+#### 3. Kafka Consumer Processes Event
+
+A Kafka consumer listens for login events.
+
+When it receives the message:
+
+```json
+{
+  "event": "user_logged_in",
+  "user_id": 7
+}
+```
+
+it:
+
+1. Queries the database
+2. Calculates recommendations
+3. Selects a book to recommend
+
+Example:
+
+```json
+{
+  "title": "The Name of the Wind",
+  "author": "Patrick Rothfuss"
+}
+```
+
+---
+
+#### 4. Consumer Sends Notification to FastAPI
+
+The Kafka consumer cannot communicate directly with the user's phone.
+
+Instead, it sends an internal HTTP request back to FastAPI:
+
+```text
+POST /internal/send-notification
+```
+
+containing the recommendation payload.
+
+```text
+Kafka Consumer
+       │
+       ▼
+FastAPI
+```
+
+---
+
+#### 5. FastAPI Pushes Data Through WebSocket
+
+FastAPI maintains a registry of active WebSocket connections.
+
+Example:
+
+```python
+active_connections = {
+    7: websocket_connection
+}
+```
+
+When the notification arrives:
+
+1. FastAPI finds the user's active WebSocket.
+2. Sends the notification through the open connection.
+
+```text
+FastAPI
+      │
+      ▼
+WebSocket
+      │
+      ▼
+Flutter App
+```
+
+---
+
+#### 6. Flutter Displays Notification
+
+The Flutter application receives the payload:
+
+```json
+{
+  "type": "POPUP_NOTIFICATION",
+  "title": "Recommended Book",
+  "book": "The Name of the Wind"
+}
+```
+
+and renders it as:
+
+- Popup dialog
+- Snackbar
+- Push-style notification
+- Recommendation card
+
+depending on the UI design.
+
+---
+
+### Visual Flow
+
+```text
+[ Flutter App ]
+       │
+       │ 1. Login
+       ▼
+[ FastAPI ]
+       │
+       │ 2. Publish Event
+       ▼
+[ Kafka Broker ]
+       │
+       │ 3. Consume Event
+       ▼
+[ Kafka Consumer ]
+       │
+       │ 4. Internal HTTP Request
+       ▼
+[ FastAPI ]
+       │
+       │ 5. WebSocket Push
+       ▼
+[ Flutter App ]
+       │
+       │ 6. Display Notification
+       ▼
+[ User Sees Recommendation ]
+```
+
+---
+
+### Benefits of This Architecture
+
+#### Real-Time Updates
+
+The server can immediately notify users without waiting for another request.
+
+#### Decoupled Services
+
+The recommendation engine runs independently from the API server.
+
+#### Scalable
+
+Additional consumers can be added later for:
+
+- Email recommendations
+- Push notifications
+- Analytics
+- Recommendation tracking
+
+without changing the Flutter app.
+
+#### Event-Driven Design
+
+Kafka allows recommendation generation to happen asynchronously without slowing down the login process.
+
+---
+
+### Future Enhancements
+
+Possible Kafka consumers:
+
+- Recommendation Email Service
+- Mobile Push Notification Service
+- Analytics Pipeline
+- User Activity Tracking
+- Recommendation Click Tracking
+- Personalized Recommendation Engine
+
+This allows Biblo to evolve into a fully event-driven architecture while keeping the frontend and backend loosely coupled.

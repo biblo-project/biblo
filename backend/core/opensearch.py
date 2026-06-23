@@ -57,7 +57,7 @@ def connect_opensearch() -> OpenSearch:
         if client.ping():
             logger.info("Successfully connected to OpenSearch cluster cluster!")
         else:
-            logger.error("OpenSearch ping failed. Cluster might be unavailable.")
+            logger.error("OpenSearch ping failed. Cluster might be unavailable. Continuing startup anyway......")
             
         return client
 

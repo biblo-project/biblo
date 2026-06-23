@@ -9,10 +9,10 @@ class NotificationService {
 
   // Notice: No BuildContext is passed here anymore! Completely clean.
   void initialize(int userId) {
-    final wsUrl = Uri.parse('ws://10.0.2.2:8000/ws/notifications/$userId');
+    final wsUrl = Uri.parse('ws://10.0.2.2:8000/web-socket/notifications/$userId');
     _channel = WebSocketChannel.connect(wsUrl);
 
-    print("🛰️ Connecting to Notification Web Socket for User $userId...");
+    print("Connecting to Notification Web Socket for User $userId...");
 
     _channel!.stream.listen((message) {
       try {
@@ -50,7 +50,7 @@ class NotificationService {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-          title: const Text("🎵 Recommended For You", style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text("Recommended For You", style: TextStyle(fontWeight: FontWeight.bold)),
           content: Text(questionText, style: const TextStyle(fontSize: 16.0)),
           actions: [
             TextButton(

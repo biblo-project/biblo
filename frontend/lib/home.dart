@@ -2,6 +2,7 @@ import 'theme.dart';
 import 'package:flutter/material.dart';
 import 'basic_button.dart';
 import 'package:biblo/services/post_login_notification_service.dart';
+import 'services/token_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,11 +18,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Initialize the real-time pipeline once the UI layout finishes mounting
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Passing a mock user ID 42 for testing your Kafka group
-      _notificationService.initialize(42);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userId = await TokenService.getUserId();
+      if (userId != null) {
+        _notificationService.initialize(userId);
+      }
     });
   }
 

@@ -41,6 +41,7 @@ dependencies:
   url_launcher: ^6.3.2
   cached_network_image: ^3.4.1
   web_socket_channel: ^3.0.3
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:

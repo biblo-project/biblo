@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class TokenService {
   // Initialize the secure storage manager
@@ -20,5 +21,22 @@ class TokenService {
   // DELETE the token (Call this when the user logs out)
   static Future<void> deleteToken() async {
     await _storage.delete(key: _tokenKey);
+  }
+
+  // NEW: Extracts the logged-in user's id from the stored JWT's "sub" claim.
+  // Backend sets this during login:
+  // create_access_token(data={"sub": str(user.id)})
+  static Future<int?> getUserId() async {
+    final token = await getToken();
+    if (token == null) return null;
+
+    try {
+      final decoded = JwtDecoder.decode(token);
+      final userIdString = decoded['sub'];
+      return int.tryParse(userIdString);
+    } catch (e) {
+      print("Failed to decode JWT for user id: $e");
+      return null;
+    }
   }
 }

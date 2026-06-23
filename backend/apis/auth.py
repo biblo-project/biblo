@@ -12,6 +12,13 @@ from confluent_kafka import Producer
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+# Initialize a configured instance of the Kafka Producer
+# Point it to your local Docker CLIENT ports
+kafka_producer = Producer({
+    'bootstrap.servers': 'localhost:9092,localhost:9094,localhost:9095',
+    'client.id': 'biblo-auth-service'
+})
+
 #___________________________________________________________
 # signup
 @router.post("/signup", response_model=UserOut)
@@ -57,13 +64,13 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 
     # fire the event right after a successful credential check
     try:
-        Producer.produce(
+        kafka_producer.produce(
             topic="user-logins",
             key=str(user.id),
             value=json.dumps(login_event).encode('utf-8')
         )
 
-        Producer.flush() # force Kafka to send the event immediately
+        kafka_producer.flush() # force Kafka to send the event immediately
 
     except Exception as kafka_error:
         print(f"Failed to publish login event: {kafka_error}")

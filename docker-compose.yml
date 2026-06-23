@@ -65,6 +65,8 @@ services:
   biblo-kafka1:
     image: apache/kafka:latest
     container_name: biblo-kafka1
+    volumes:
+      - kafka1_data:/var/lib/kafka/data
     ports:
       - "${KAFKA1_PORT}:9092"
     environment:
@@ -85,6 +87,8 @@ services:
   biblo-kafka2:
     image: apache/kafka:latest
     container_name: biblo-kafka2
+    volumes:
+      - kafka2_data:/var/lib/kafka/data
     ports:
       - "${KAFKA2_PORT}:9094" # Remapped port assignment host collision protections
     environment:
@@ -104,6 +108,8 @@ services:
   biblo-kafka3:
     image: apache/kafka:latest
     container_name: biblo-kafka3
+    volumes:
+      - kafka3_data:/var/lib/kafka/data
     ports:
       - "${KAFKA3_PORT}:9095"
     environment:
@@ -137,3 +143,11 @@ services:
 networks:
   biblo-opensearch-network:
     driver: bridge
+
+# =================================================================
+# PERSISTENT DATA STORAGE DECLARATIONS
+# =================================================================
+volumes:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
