@@ -42,6 +42,7 @@ dependencies:
   cached_network_image: ^3.4.1
   web_socket_channel: ^3.0.3
   jwt_decoder: ^2.0.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,13 @@ flutter:
   assets:
     - assets/images/
     - assets/images/avatars/temporary/
+    - assets/app_icon.png
+
+flutter_launcher_icons:
+   android: true
+   ios: true
+   image_path: "assets/app_icon.png"
+   min_sdk_android: 21
 
   # To add assets to your application, add an assets section, like this:
   # assets:
