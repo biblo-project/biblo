@@ -6,7 +6,9 @@ from confluent_kafka import Consumer, KafkaError
 # Import your real database session and models
 from backend.database import get_db
 from backend.models.user import User
-from backend.models.book import Book  
+from backend.models.book import Book
+
+import requests
 
 # 1. Configure the Consumer to listen to the login stream
 conf = {
@@ -86,6 +88,16 @@ try:
                 # 7. Print out the exact package ready for delivery
                 print(f"SENDING POP-UP PAYLOAD TO FRONTEND:")
                 print(json.dumps(popup_payload, indent=2))
+
+                try:
+                    response = requests.post(
+                        "http://localhost:8000/internal/send-notification",
+                        json=popup_payload,
+                        timeout=2
+                    )
+                    print(f"Dispatch status: {response.json()}")
+                except Exception as e:
+                    print(f"Could not dispatch to WebSocket gateway: {e}")
 
             finally:
                 db.close()  
