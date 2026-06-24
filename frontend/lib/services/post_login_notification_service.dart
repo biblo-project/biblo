@@ -53,13 +53,19 @@ class NotificationService {
           title: const Text("Recommended For You", style: TextStyle(fontWeight: FontWeight.bold)),
           content: Text(questionText, style: const TextStyle(fontSize: 16.0)),
           actions: [
+
+            // "Nah, later" button
             TextButton(
               onPressed: () {
-                _channel?.sink.add(jsonEncode({"action": noButton['action']}));
+                _channel?.sink.add(jsonEncode({
+                  "action": noButton['action']
+                }));
                 Navigator.of(dialogContext).pop();
               },
               child: Text(noButton['text'], style: const TextStyle(color: Colors.grey, fontSize: 16)),
             ),
+
+            // "Yes, please" button
             ElevatedButton(
               onPressed: () {
                 _channel?.sink.add(jsonEncode({
@@ -67,10 +73,18 @@ class NotificationService {
                   "book_id": yesButton['book_id']
                 }));
                 Navigator.of(dialogContext).pop();
+
+                // We pass the book_id inside the arguments map so the screen can fetch its profile.
+                Navigator.pushNamed(
+                  context,
+                  '/book_details',
+                  arguments: {'book_id': yesButton['book_id']},
+                );
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
               child: Text(yesButton['text'], style: const TextStyle(color: Colors.white, fontSize: 16)),
             ),
+
           ],
         );
       },
