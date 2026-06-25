@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     OPENSEARCH_USER: str = "admin"
     OPENSEARCH_PASSWORD: str = Field(default=None)
 
+    # 📧 Email Configurations
+    SMTP_SERVER: str
+    SMTP_PORT: int
+    TEST_SENDER_EMAIL: str
+    TEST_SENDER_PASSWORD: str
+    TEST_RECEIVER_EMAIL: str
+
     # Modern Pydantic configuration
     model_config = SettingsConfigDict(
         env_file=".env",
