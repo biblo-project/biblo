@@ -9,6 +9,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     username: str
+    is_admin: bool
 
     class Config:
         from_attributes = True
@@ -30,3 +31,9 @@ you to write manual data-parsing or database join logic.
 class UserLogin(BaseModel):
     username_or_email: str
     password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    is_admin: bool  # Flutter reads this to route the user
+    user_id: int

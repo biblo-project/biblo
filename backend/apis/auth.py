@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.user import User
-from backend.schemas.user import UserCreate, UserOut, UserLogin
+from backend.schemas.user import UserCreate, UserOut, UserLogin, TokenResponse
 from backend.core.security import  hash_password, verify_password, create_access_token
 
 # imports to fire the "login" event to Kafka
@@ -40,7 +40,7 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
 
 #___________________________________________________________
 # login
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 def login(user_data: UserLogin, db: Session = Depends(get_db)):
 
     # .strip() prevents issues if the user accidentally typed a trailing space
@@ -75,4 +75,9 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
     except Exception as kafka_error:
         print(f"Failed to publish login event: {kafka_error}")
 
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": token, 
+        "token_type": "bearer",
+        "is_admin": user.is_admin,
+        "user_id": user.id
+        }

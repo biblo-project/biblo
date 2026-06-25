@@ -54,6 +54,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -69,12 +70,13 @@ flutter:
   assets:
     - assets/images/
     - assets/images/avatars/temporary/
-    - assets/app_icon.png
+    - assets/app_icon_without_padding.png
+    - assets/app_icon_padding.png
 
 flutter_launcher_icons:
    android: true
    ios: true
-   image_path: "assets/app_icon.png"
+   image_path: "assets/app_icon_without_padding.png"
    min_sdk_android: 21
 
   # To add assets to your application, add an assets section, like this:
@@ -107,3 +109,12 @@ flutter_launcher_icons:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#1b5e20"
+  image: assets/app_icon_padding.png
+
+  # 🎯 THIS IS THE FIX FOR ANDROID 12+
+  android_12:
+    image: assets/app_icon_padding.png
+    icon_background_color: "#1b5e20"

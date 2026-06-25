@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-Future<String?> authenticateUser(String username_or_email, String password) async {
+Future<Map<String, dynamic>?> authenticateUser(String username_or_email, String password) async {
   // Remember: 10.0.2.2 points your Android emulator to your computer's backend
   final url = Uri.parse('http://10.0.2.2:8000/auth/login');
   final response = await http.post(
@@ -33,7 +33,8 @@ Future<String?> authenticateUser(String username_or_email, String password) asyn
 
     // warning: Don't invoke 'print' in production code.
     print("Login successful!");
-    return token;
+    //return token;
+    return responseData;
   }
 
   else
@@ -207,7 +208,7 @@ class LoginScreenState extends State<LoginScreen>
                             // Now, call your function using the actual text from your controllers
                             // we use 'await' because we have to wait for the network response
                             try {
-                              final String? token = await authenticateUser(
+                              final Map<String, dynamic>? authData = await authenticateUser(
                                   _usernameOrEmailController.text.trim(),
                                   _passwordController.text
                               );
@@ -215,12 +216,23 @@ class LoginScreenState extends State<LoginScreen>
                               // check if the widget is still alive in the layout tree
                               if(!context.mounted) return;
 
-                              if(token != null){
+                              if(authData != null) {
+
+                                final String token = authData['access_token'];
+                                final bool isAdmin = authData['is_admin'] ?? false; // 🎯 Extract the admin flag
+
                                 // save the token to the device here
                                 await secureStorage.write(key: 'access_token', value: token);
 
-                                // navigate away safely
-                                navigator.pushReplacementNamed('/home');
+                                if (isAdmin) {
+                                  navigator.pushReplacementNamed('/administrator'); // Make sure this path exists in your main.dart routes!
+                                } else {
+                                  navigator.pushReplacementNamed('/home');
+                                }
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid credentials')),
+                                );
                               }
 
                             } catch (e) {

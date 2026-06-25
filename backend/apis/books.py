@@ -27,6 +27,8 @@ from backend.database import get_db   # Your DB Session Yield hook
 
 from backend.kafka.producers.book_update_producer import publish_book_event
 
+from backend.core.auth import require_admin
+
 router = APIRouter(prefix="/books", tags=["Books"])
 
 #_____________________________________________________________________________________________________
@@ -36,7 +38,7 @@ router = APIRouter(prefix="/books", tags=["Books"])
 # ADD BOOKS   
 
 @router.post("/admin", response_model=BookOut, status_code=status.HTTP_201_CREATED)
-def create_book(book_in: BookCreate, db: Session = Depends(get_db)) -> Any:
+def create_book(book_in: BookCreate, db: Session = Depends(get_db), current_admin: User = Depends(require_admin)) -> Any:
     """
     Creates a new book entry in the PostgreSQL database.
     This action will serve as our future upstream event source for Kafka syncing.
@@ -92,7 +94,7 @@ def create_book(book_in: BookCreate, db: Session = Depends(get_db)) -> Any:
 # UPDATE BOOKS
 
 @router.put("/admin/{book_id}", response_model=BookOut)
-def update_book(book_id: int, book_in: BookUpdate, db: Session = Depends(get_db)) -> Any:
+def update_book(book_id: int, book_in: BookUpdate, db: Session = Depends(get_db), current_admin: User = Depends(require_admin)) -> Any:
     """
     Updates an existing book record in PostgreSQL.
     This will serve as our future Kafka event source for 'UPDATE' mutations.
@@ -160,7 +162,7 @@ def update_book(book_id: int, book_in: BookUpdate, db: Session = Depends(get_db)
 from backend.core.opensearch import get_opensearch_client
 
 @router.get("/admin/search", response_model=List[BookOut])
-def admin_search_books(q: str = "", db: Session = Depends(get_db)):
+def admin_search_books(q: str = "", db: Session = Depends(get_db), current_admin: User = Depends(require_admin)):
     """
     Searches books using OpenSearch multi_match with fuzziness enabled.
     Falls back to a clean list if no matches or cluster errors occur.
@@ -226,7 +228,7 @@ def admin_search_books(q: str = "", db: Session = Depends(get_db)):
 # DELETE BOOKS
     
 @router.delete("/admin/{book_id}", status_code=status.HTTP_200_OK)
-def delete_book(book_id: int, db: Session = Depends(get_db)):
+def delete_book(book_id: int, db: Session = Depends(get_db), current_admin: User = Depends(require_admin)):
     """
     Deletes a book record from PostgreSQL and removes it 
     from the OpenSearch search index instantly.
