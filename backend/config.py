@@ -5,6 +5,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(default=None)
     SECRET_KEY:str = Field(default=None)
 
+    DB_NAME: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_PORT: int
+
     # --- Add your OpenSearch environment mappings ---
     OPENSEARCH_HOST: str = "localhost"
     OPENSEARCH_PORT: int = 9200

@@ -17,6 +17,8 @@ services:
       - 9600:9600
     networks:
       - biblo-opensearch-network
+    volumes:
+      - opensearch1_data:/usr/share/opensearch/data
 
   biblo-opensearch-node2:
     image: opensearchproject/opensearch:latest
@@ -29,6 +31,8 @@ services:
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
     networks:
       - biblo-opensearch-network
+    volumes:
+      - opensearch2_data:/usr/share/opensearch/data
 
   biblo-opensearch-node3:
     image: opensearchproject/opensearch:latest
@@ -41,6 +45,8 @@ services:
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
     networks:
       - biblo-opensearch-network
+    volumes:
+      - opensearch3_data:/usr/share/opensearch/data
 
   # =================================================================
   # OPENSEARCH DASHBOARDS FRONTEND
@@ -151,3 +157,7 @@ volumes:
   kafka1_data:
   kafka2_data:
   kafka3_data:
+
+  opensearch1_data:
+  opensearch2_data:
+  opensearch3_data:

@@ -1,10 +1,12 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from opensearchpy import OpenSearch, helpers
-import os
+from backend.config import settings
 
 # 1. Database and OpenSearch Connection Settings
 # Replace these strings with your actual database credentials
+
+'''
 DB_SETTINGS = {
     "dbname": "BIBLO",
     "user": "postgres",
@@ -12,11 +14,20 @@ DB_SETTINGS = {
     "host": "localhost",
     "port": 5432
 }
+'''
 
-OPENSEARCH_HOST = "localhost"
-OPENSEARCH_PORT = 9200
+DB_SETTINGS = {
+    "dbname": settings.DB_NAME,
+    "user": settings.DB_USER,
+    "password": settings.DB_PASSWORD,
+    "host": settings.DB_HOST,
+    "port": settings.DB_PORT
+}
+
+OPENSEARCH_HOST = settings.OPENSEARCH_HOST
+OPENSEARCH_PORT = settings.OPENSEARCH_PORT
 # Pull the admin password directly from your environment or copy your string here
-OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD") 
+OPENSEARCH_PASSWORD = settings.OPENSEARCH_PASSWORD
 INDEX_NAME = "biblo_books"
 
 def get_opensearch_client():
