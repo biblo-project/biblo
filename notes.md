@@ -2403,3 +2403,12 @@ Possible Kafka consumers:
 - Personalized Recommendation Engine
 
 This allows Biblo to evolve into a fully event-driven architecture while keeping the frontend and backend loosely coupled.
+
+## 32. APS Scheduler
+1. **BackgroundScheduler:** Runs silently in a separate background thread, ensuring it won't block your FastAPI/Uvicorn request loop or freeze user traffic.
+2. **Triggers (The "When"):**
+
+* **interval:** Executes tasks at fixed time gaps (e.g., minutes=1). Great for rapid testing or heartbeats.
+* **cron:** Executes tasks at specific calendar times (e.g., hour=0, minute=0 for midnight). Perfect for daily recommendation batches.
+* **date:** Executes a task exactly once at a precise timestamp.
+* **Lifespan Management:** Must be registered inside FastAPI's startup and shutdown event loops to properly clean up background worker threads and prevent system memory leaks.
