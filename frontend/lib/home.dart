@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.pushNamed(context, '/about_me');
                       },
                       child: const Text(
-                        'Learn about me!',
+                        'Learn more about Biblo',
                         style: TextStyle(
                           color: Colors.lightBlueAccent, // Traditional link color
                           decoration: TextDecoration.underline, // Adds the underline
