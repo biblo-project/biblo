@@ -277,22 +277,6 @@ def delete_book(book_id: int, db: Session = Depends(get_db), current_admin: User
 #_____________________________________________________________________________________________________
 
 #_____________________________________________________________________________________________________
-# GET SINGLE BOOK DETAIL
-
-@router.get("/{book_id}", response_model=BookOut)
-def get_book_by_id(
-    book_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    book = db.query(Book).filter(Book.id == book_id).first()
-    
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    
-    return book
-
-#_____________________________________________________________________________________________________
 # GET RANDOM RECS
 
 @router.get("/random", response_model=List[BookOut])
@@ -480,4 +464,21 @@ def toggle_like_book(
             "liked": True,
             "message": f"Successfully added '{book.title}' to your reading list as to_read."
         }
+    
+#_____________________________________________________________________________________________________
+# GET SINGLE BOOK DETAIL
+
+@router.get("/{book_id}", response_model=BookOut)
+def get_book_by_id(
+    book_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    book = db.query(Book).filter(Book.id == book_id).first()
+    
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    return book
+
 

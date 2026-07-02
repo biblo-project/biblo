@@ -2412,3 +2412,17 @@ This allows Biblo to evolve into a fully event-driven architecture while keeping
 * **cron:** Executes tasks at specific calendar times (e.g., hour=0, minute=0 for midnight). Perfect for daily recommendation batches.
 * **date:** Executes a task exactly once at a precise timestamp.
 * **Lifespan Management:** Must be registered inside FastAPI's startup and shutdown event loops to properly clean up background worker threads and prevent system memory leaks.
+
+## 33. FastAPI Route Ordering — Parameterised Routes Must Always Come Last
+During development, ```GET /books/random``` and ```GET /books/curated``` were returning ```422 Unprocessable Content``` despite the Flutter client sending a valid JWT token and correct request headers. The backend logs confirmed the requests were reaching FastAPI, ruling out a network or authentication issue.
+
+**Root cause:** FastAPI matches routes in declaration order, top to bottom. The parameterised route ```GET /books/{book_id}``` was declared above the specific named routes ```/random``` and ```/curated```. When Flutter called ```/books/random```, FastAPI matched ```/{book_id}``` first and attempted to parse the string "random" as an integer ```book_id``` — which fails validation, producing a 422.
+
+**Fix:** Reorder routes so all specific named paths are declared before any parameterised catch-all routes:
+```
+GET /books/random        ← specific, declared first
+GET /books/curated       ← specific, declared second
+GET /books/search        ← specific, declared third
+GET /books/{book_id}     ← parameterised catch-all, always last
+```
+**Rule of thumb:** If a route segment could be confused for a path parameter value (e.g. "random" matching ```{book_id}```), the specific route must come first. This applies to all FastAPI routers, not just books.
