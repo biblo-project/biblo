@@ -45,7 +45,7 @@ class Book extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    final String coverUrl = 'https://covers.openlibrary.org/b/isbn/${book.isbn.trim()}-M.jpg';
+    final String coverUrl = 'https://raw.githubusercontent.com/biblo-project/biblo/main/assets/book_covers/${book.id}.jpg';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
@@ -105,7 +105,7 @@ class Book extends StatelessWidget {
 
                     // 2. Simple loading layout
                     loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress != null) return child;
+                      if (loadingProgress == null) return child;
                       return const Center(
                         child: CircularProgressIndicator(color: Colors.white),
                       );

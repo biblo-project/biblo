@@ -32,8 +32,8 @@ class BookTile extends StatelessWidget {
           // 1. SMALL BOOK COVER IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(6.0),
-            child: const Image(
-              image: AssetImage('assets/images/book-cover-temporary.jpg'),
+            child: Image(
+              image: NetworkImage('https://raw.githubusercontent.com/biblo-project/biblo/main/assets/book_covers/${book.id}.jpg'),
               width: 55,
               height: 80,
               fit: BoxFit.cover,
