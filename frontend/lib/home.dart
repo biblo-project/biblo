@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Text(
-                      'So, what are we doing today?\n',
+                      'What would you like?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: textColor,
@@ -56,64 +56,87 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // BUTTON TO GET A RANDOM SUGGESTION
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/random_suggestions', title: 'Get random suggestions'),
-                  ),
+                  const SizedBox(height: 36),
 
-                  // BUTTON TO GET A CURATED SUGGESTION
+// Both buttons placed inside a Column, stretched to screen width with padding
                   Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/curated_suggestions', title: 'Get curated suggestions'),
-                  ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0), // Outer screen padding for the buttons
+                    child: Column(
+                      children: [
 
-                  // BUTTON TO UPDATE PREFERENCES
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/select_genres', title: 'Update my preferences'),
-                  ),
-
-                  // SEARCH BOOKS
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/search', title: 'Search'),
-                  ),
-
-                  // BUTTON TO PLAY SOME GAMES
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/games', title: 'Play some games'),
-                  ),
-
-                  // BUTTON TO VIEW USER PROFILE
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: const BasicButton(route: '/user_profile', title: 'View my profile'),
-                  ),
-
-                  Text('\n\n\n\n\n\n\n\n'),
-
-                  Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/about_me');
-                      },
-                      child: const Text(
-                        'Learn more about Biblo',
-                        style: TextStyle(
-                          color: Colors.lightBlueAccent, // Traditional link color
-                          decoration: TextDecoration.underline, // Adds the underline
-                          fontSize: 20,
+                        SizedBox(
+                          width: double.infinity, // Forces button to match column/screen width
+                          height: 60,
+                          child: const BasicButton(route: '/random_suggestions', title: 'Random suggestions'),
                         ),
-                      ),
+
+                        const SizedBox(height: 12), // Clean spacing between the two buttons
+
+                        SizedBox(
+                          width: double.infinity, // Forces button to match column/screen width
+                          height: 60,
+                          child: const BasicButton(route: '/curated_suggestions', title: 'Curated suggestions'),
+                        ),
+
+                        const SizedBox(height: 12), // Clean spacing between the two buttons
+
+                        // BUTTON TO PLAY SOME GAMES
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60,
+                          child: BasicButton(route: '/games', title: 'Games'),
+                        ),
+
+                        const SizedBox(height: 12), // Clean spacing between the two buttons
+
+                        // BUTTON TO PLAY SOME GAMES
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60,
+                          child: BasicButton(route: '/about_me', title: 'Learn more about Biblo'),
+                        )
+
+                      ],
                     ),
-                  )
+                  ),
 
                 ]
             )
-        )
+        ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: primaryColor,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.pushNamed(context, '/search');
+          } else if (index == 1) {
+            Navigator.pushNamed(context, '/user_profile'); // Manage preferences lives here now
+          }
+        },
+        items: const [
+
+          BottomNavigationBarItem(
+            icon: Icon(
+                Icons.search,
+                size: 28,
+              ),
+            label: 'Search',
+          ),
+
+          BottomNavigationBarItem(
+            icon: Icon(
+                Icons.person,
+                size: 28
+            ),
+            label: 'My Profile',
+          ),
+
+        ],
+      ),
     );
   }
 }

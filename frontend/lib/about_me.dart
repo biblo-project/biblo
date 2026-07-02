@@ -19,6 +19,8 @@ class _AboutMeScreenState extends State<AboutMeScreen> {
     super.initState();
     // 🌟 2. Initialize the video from your raw GitHub URL (Must use the raw.githubusercontent.com domain)
     _videoController = VideoPlayerController.networkUrl(
+      // Drop this public test video link into your initState method to see if it plays
+       // Uri.parse('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
       Uri.parse('https://raw.githubusercontent.com/biblo-project/biblo/main/assets/sample_video.mp4'),
     )..initialize().then((_) {
       setState(() {
