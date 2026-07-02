@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:biblo/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'theme.dart';
@@ -40,6 +41,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.get(
         url,
         headers: {
@@ -47,6 +50,10 @@ class _SearchScreenState extends State<SearchScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.get('/search?q=${Uri.encodeComponent(query)}');
 
       if (response.statusCode == 200) {
         final List<dynamic> decodedData = jsonDecode(response.body);
@@ -81,6 +88,8 @@ class _SearchScreenState extends State<SearchScreen> {
       final url = Uri.parse('http://10.0.2.2:8000/books/${book.id}/toggle-like');
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.post(
         url,
         headers: {
@@ -88,6 +97,10 @@ class _SearchScreenState extends State<SearchScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.post('/books/${book.id}/toggle-like', {});
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);

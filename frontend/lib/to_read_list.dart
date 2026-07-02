@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:biblo/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'theme.dart';
@@ -30,6 +31,8 @@ class _ToReadListScreenState extends State<ToReadListScreen> {
       final url = Uri.parse('http://10.0.2.2:8000/user/to-read');
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.get(
         url,
         headers: {
@@ -37,6 +40,10 @@ class _ToReadListScreenState extends State<ToReadListScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.get('/user/to-read');
 
       if (!mounted) return;
 
@@ -75,6 +82,8 @@ class _ToReadListScreenState extends State<ToReadListScreen> {
       final url = Uri.parse('http://10.0.2.2:8000/books/${book.id}/toggle-like');
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.post(
         url,
         headers: {
@@ -82,6 +91,10 @@ class _ToReadListScreenState extends State<ToReadListScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.post('/books/${book.id}/toggle-like', {});
 
       if (!mounted) return;
 

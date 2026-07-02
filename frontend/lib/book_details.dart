@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:biblo/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'theme.dart'; // Imports primaryColor, textColor, etc.
@@ -40,6 +41,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     try {
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.get(
         Uri.parse('http://10.0.2.2:8000/books/$bookId'),
         headers: {
@@ -47,6 +50,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.get('/books/$bookId');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -83,6 +90,8 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       final url = Uri.parse('http://10.0.2.2:8000/books/${_bookData!.id}/toggle-like');
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.post(
         url,
         headers: {
@@ -90,6 +99,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.post('/books/${_bookData!.id}/toggle-like', {});
 
       if (!mounted) return;
 

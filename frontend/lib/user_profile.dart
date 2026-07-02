@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:biblo/select_genres.dart';
+import 'package:biblo/services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'theme.dart'; // Holds your primaryColor, textColor, etc.
@@ -31,6 +32,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       final url = Uri.parse('http://10.0.2.2:8000/user/me');
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.get(
         url,
         headers: {
@@ -38,6 +41,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.get('/user/me');
 
       if (!mounted) return;
 

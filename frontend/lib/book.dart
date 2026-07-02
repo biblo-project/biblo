@@ -81,7 +81,7 @@ class Book extends StatelessWidget {
 
           // 3. IMAGE COVERS 1/2 THE SCREEN HEIGHT (flex: 1)
           Expanded(
-            flex: 4,
+            flex: 6,
             child: Center(
               child: Container(
                 width: double.infinity, // Allows the cover to stretch naturally across the width

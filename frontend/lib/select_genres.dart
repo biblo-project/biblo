@@ -1,3 +1,5 @@
+import 'package:biblo/services/api_service.dart';
+
 import 'services/token_service.dart';
 import 'theme.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +45,8 @@ Future<void> _fetchGenres() async {
     final url = Uri.parse('http://10.0.2.2:8000/genres/');
     final String? secureToken = await TokenService.getToken();
 
+    /*
+    // BEFORE
     final response = await http.get(
       url,
       headers: {
@@ -50,6 +54,10 @@ Future<void> _fetchGenres() async {
         'Authorization': 'Bearer $secureToken', // Authenticates the user
       },
     );
+    */
+
+    // AFTER
+    final response = await ApiService.get('/genres/');
 
     if (!mounted) return;
 
@@ -89,6 +97,8 @@ Future<void> _fetchGenres() async {
         return; // Stop running the rest of the network submission function
       }
 
+      /*
+      // BEFORE
       final response = await http.put(
         Uri.parse('http://10.0.2.2:8000/genres/'),
         headers: {
@@ -99,6 +109,16 @@ Future<void> _fetchGenres() async {
           'genres': _selectedGenres.toList(),
           'allow_unrestricted': true,
         }),
+      );
+      */
+
+      // AFTER
+      final response = await ApiService.put(
+          '/genres/',
+        {
+          'genres': _selectedGenres.toList(),
+          'allow_unrestricted': true,
+        }
       );
 
       if (response.statusCode == 200) {

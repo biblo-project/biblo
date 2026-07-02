@@ -4,6 +4,7 @@ import 'book.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'services/token_service.dart';
+import 'package:biblo/services/api_service.dart';
 
 class RandomSuggestionsScreen extends StatefulWidget {
   const RandomSuggestionsScreen({super.key});
@@ -76,6 +77,8 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
       // Fetch your saved token from your storage service
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.get(
         url,
         headers: {
@@ -83,6 +86,10 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
           'Authorization': 'Bearer $token', // This authenticates the `current_user` dependency
         },
       );
+       */
+
+      // AFTER
+      final response = await ApiService.get('/books/random');
 
       if (response.statusCode == 200) {
         final List<dynamic> decodedData = jsonDecode(response.body);
@@ -119,6 +126,8 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
       final url = Uri.parse('http://10.0.2.2:8000/books/${book.id}/toggle-like');
       final String? token = await TokenService.getToken();
 
+      /*
+      // BEFORE
       final response = await http.post(
         url,
         headers: {
@@ -126,6 +135,10 @@ class _RandomSuggestionsScreenState extends State<RandomSuggestionsScreen> {
           'Authorization': 'Bearer $token',
         },
       );
+       */
+      
+      // AFTER
+      final response = await ApiService.post('/books/${book.id}/toggle-like', {});
 
       // GUARD 1: If the user navigated away during the HTTP request, stop execution quietly
       if (!mounted) return;
