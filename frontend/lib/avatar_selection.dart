@@ -34,7 +34,7 @@ class AvatarTile extends StatelessWidget {
           ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
+              child: Image.network(
                   assetImagePath,
                   fit: BoxFit.cover,
               ),
@@ -57,7 +57,8 @@ class AvatarSelectionScreenState extends State<AvatarSelectionScreen>
 {
   List<String> avatarAssetImageList = List.generate(16, (index) {
     // I use index + 1 because the list starts at 0, but my images start at 1
-        return 'assets/images/avatars/temporary/avatar-${index + 1}.jpg';
+        //return 'assets/images/avatars/temporary/avatar-${index + 1}.jpg';
+        return 'https://raw.githubusercontent.com/biblo-project/biblo/main/assets/avatars/${index+1}.png';
   });
 
   int? selectedIndex;
