@@ -106,10 +106,31 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Center(
             child: Stack(
               children: [
+                // 1. Base Avatar Image
                 CircleAvatar(
                   radius: 85,
                   backgroundColor: Colors.white,
-                  backgroundImage: const AssetImage('assets/images/avatars/biblo-signup-avatar-cropped.png'),
+                  backgroundImage: const AssetImage('assets/images/biblo-signup-avatar-cropped.png'),
+                ),
+
+                // 2. Positioned Edit Button on Bottom Right
+                Positioned(
+                  bottom: 5,
+                  right: 5,
+                  child: GestureDetector(
+                    onTap: () {
+                      print("Avatar clicked! Trigger image picker pipeline.");
+                    },
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: secondaryColor, // Uses your theme's secondary color
+                      child: Icon(
+                        Icons.edit,
+                        color: primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
