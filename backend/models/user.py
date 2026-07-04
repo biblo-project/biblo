@@ -11,6 +11,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_admin = Column(Boolean, nullable=False, default=False)
+    avatar_id = Column(Integer, nullable=True, default=None)
 
     # Relationships
     # cascade="all, delete-orphan" means if a user is deleted, delete their chosen genres too

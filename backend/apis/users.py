@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.user import User
@@ -43,4 +43,15 @@ def get_to_read_list(
 
     return output
 
+@router.put("/avatar")
+def update_avatar(
+    avatar_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if avatar_id < 1 or avatar_id > 16:
+        raise HTTPException(status_code=400, detail="Invalid avatar id")
+    current_user.avatar_id = avatar_id
+    db.commit()
+    return {"message": "Avatar updated", "avatar_id": avatar_id}
 

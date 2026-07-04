@@ -1,3 +1,5 @@
+import 'package:biblo/services/api_service.dart';
+
 import 'theme.dart';
 import 'package:flutter/material.dart';
 
@@ -32,13 +34,27 @@ class AvatarTile extends StatelessWidget {
                 width: isSelected? 10 : 5,
             ),
           ),
+
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Image.network(
                   assetImagePath,
                   fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child; // Image finished loading
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
+                  );
+                },
+                // Optional: handles broken URLs gracefully
+                errorBuilder: (context, error, stackTrace) => const Center(
+                  child: Icon(Icons.broken_image, color: Colors.white, size: 40),
+                ),
               ),
           ),
+
         ),
       ),
     );
@@ -132,7 +148,37 @@ class AvatarSelectionScreenState extends State<AvatarSelectionScreen>
                     padding: const EdgeInsets.all(25.0),
                     child: ElevatedButton(
                         onPressed: selectedIndex != null
-                            ? () => Navigator.pop(context, avatarAssetImageList[selectedIndex!])
+                            //? () => Navigator.pop(context, avatarAssetImageList[selectedIndex!])
+                            ? () async {
+                          final int chosenAvatarId = selectedIndex! + 1;
+
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
+                          try {
+                            final response = await ApiService.put(
+                                '/user/avatar?avatar_id=$chosenAvatarId',
+                                {} // Empty body since it's a query param
+                            );
+
+                            if (response.statusCode == 200) {
+                              if (mounted) {
+                                navigator.pop(avatarAssetImageList[selectedIndex!]);
+                              }
+                            } else {
+                              throw Exception('Backend rejected avatar change');
+                            }
+                          } catch(e) {
+                            if(mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                    content: Text('Failed to update avatar: $e'),
+                                  backgroundColor: Colors.redAccent,
+                                )
+                              );
+                            }
+                          }
+                        }
                             : null,
                         style: ElevatedButton.styleFrom(
                           // It sets the background color for the 'Enabled' state.

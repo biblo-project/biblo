@@ -10,6 +10,7 @@ class UserOut(BaseModel):
     email: EmailStr
     username: str
     is_admin: bool
+    avatar_id: int | None = None
 
     class Config:
         from_attributes = True
