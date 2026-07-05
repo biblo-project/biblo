@@ -209,6 +209,13 @@ class _SearchScreenState extends State<SearchScreen> {
         return BookTile(
           book: currentBook,
           onLikeTapped: () => _toggleBookLike(currentBook),
+          // NEW: receives the exact value back from the details screen
+          // and sets it directly instead of toggling
+          onLikeChanged: (newValue) {
+            setState(() {
+              currentBook.isLiked = newValue;
+            });
+          },
         );
       },
     );

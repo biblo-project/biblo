@@ -2426,3 +2426,59 @@ GET /books/search        ← specific, declared third
 GET /books/{book_id}     ← parameterised catch-all, always last
 ```
 **Rule of thumb:** If a route segment could be confused for a path parameter value (e.g. "random" matching ```{book_id}```), the specific route must come first. This applies to all FastAPI routers, not just books.
+
+## 34. isLiked Should Never Be a Column on the Book Model**
+During development, there was a temptation to add an is_liked column directly to the books table to simplify the API response. This is architecturally incorrect and was reverted.
+
+* **Why it's wrong:**
+
+* isLiked is not a property of a book — it is a property of the relationship between a specific user and a specific book
+* Adding it as a column on books means there is no way to answer "liked by whom?" — every user would see the same value, which is meaningless
+* The correct representation is already in place: a row in ReadingList exists when a user has liked a book, and the isLiked field is computed fresh per-request by querying that table
+
+* **The correct pattern for per-user book state:**
+```
+pythonis_liked = db.query(ReadingList).filter(
+    ReadingList.user_id == current_user.id,
+    ReadingList.book_id == book_id
+).first() is not None
+```
+
+* **Rule of thumb:** if a field's value differs per user, it belongs in a relationship/junction table, never on the entity itself.
+
+* **```response_model``` Silently Strips Fields Not Declared in the Schema**
+* When ```GET /books/{book_id}``` was updated to return ```isLiked``` as part of a custom ```dict```, the field was missing from the Flutter response despite being correctly returned by the endpoint.
+* **Root cause:** FastAPI's ```response_model=BookOut``` was filtering the response through the BookOut schema before sending it. Any field not declared in that schema — including isLiked — is silently dropped. This is intentional FastAPI behaviour (it prevents accidentally leaking sensitive fields like ```hashed_password```), but it caused a hard-to-spot bug.
+* **Two valid fixes:**
+
+* Remove ```response_model``` from the endpoint to let the raw dict through unchanged
+* Add ```isLiked: bool = False``` to ```BookOut``` so the schema includes it and nothing gets stripped
+
+
+## 35. SQLAlchemy Session Caching Can Return Stale Data
+* After liking a book via the search screen and immediately opening its details screen, isLiked was returning false despite the like being successfully committed to the database.
+* **Root cause:** SQLAlchemy sessions maintain an identity map — an in-memory cache of objects already loaded in the current session. If a query was previously run that returned no ReadingList entry for this book, the session may serve that cached result again rather than hitting the database a second time.
+* **Fix:** call ```db.expire_all()``` before the is_liked query to force a fresh read from PostgreSQL:
+```
+db.expire_all()
+is_liked = db.query(ReadingList).filter(
+    ReadingList.user_id == current_user.id,
+    ReadingList.book_id == book_id
+).first() is not None
+```
+* **Note:** Each HTTP request gets its own session via **get_db()**, so this is not a persistent cross-request cache — but within a single request lifecycle, previously loaded objects can return stale attribute values without ```expire_all()```.
+
+## 36. Combining Data From Multiple Tables Into One API Response
+* The ```GET /books/{book_id}``` endpoint needs to return both book data (from the ```Book``` model) and user-specific state (from the ```ReadingList``` table). Neither source alone has both pieces.
+* The correct pattern is to build a combined dict manually:
+```
+return {
+    "id": book.id,
+    "title": book.title,
+    "author": book.author,
+    "description": book.description,
+    "isbn": book.isbn,
+    "isLiked": is_liked  # computed from ReadingList query
+}
+```
+* **The alternative**: Adding a computed isLiked property to the ```Book``` model — would require passing the current user into the model layer, which breaks separation of concerns between the data layer and the business logic layer.

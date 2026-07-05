@@ -54,6 +54,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
       // AFTER
       final response = await ApiService.get('/books/$bookId');
+      print("Book details response: ${response.body}");
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -139,7 +140,15 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: textColor), // Ensures back button contrast looks clean
+        iconTheme: IconThemeData(color: textColor),
+        // 🌟 Overriding the back button to send the latest like status back
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Return the current liked status back to the previous screen
+            Navigator.pop(context, _bookData?.isLiked);
+          },
+        ),
         title: Text(
           "Recommendation",
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),

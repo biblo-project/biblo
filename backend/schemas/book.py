@@ -7,6 +7,7 @@ class BookOut(BaseModel):
     author: str
     description: str
     isbn: str
+    isLiked: bool = False
 
     class Config:
         from_attributes = True

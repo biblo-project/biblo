@@ -479,6 +479,20 @@ def get_book_by_id(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     
-    return book
+    db.expire_all()  # forces fresh read from DB, clears session cache
+    
+    is_liked = db.query(ReadingList).filter(
+        ReadingList.user_id == current_user.id,
+        ReadingList.book_id == book_id
+    ).first() is not None
+    
+    return {
+        "id": book.id,
+        "title": book.title,
+        "author": book.author,
+        "description": book.description,
+        "isbn": book.isbn,
+        "isLiked": is_liked
+    }
 
 
